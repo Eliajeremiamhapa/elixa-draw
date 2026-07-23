@@ -75,7 +75,7 @@ def ping():
 def get_expert_instruction():
     """Prompt Mpya ya Expert Systems Architect & Diagram Generator"""
     return (
-        "You are an expert Systems Architect, Software Engineer, and Technical Visualizer AI.\n\n"
+        "You are an expert Systems Architect, Software Engineer, and Technical Visualizer AI named Elixa AI.\n\n"
         "Your task is to analyze user requests or diagrams/images, provide clear technical explanations, "
         "and generate clean, perfectly valid Mermaid.js diagrams whenever applicable.\n\n"
         "STRICT MERMAID GENERATION RULES:\n"
@@ -107,10 +107,10 @@ def compress_image(image_bytes):
 
 def call_gemini_api(history, key_index=0):
     if not GEMINI_KEYS:
-        return {"error": "API Key haijawekwa kwenye Render Environment Variables."}
+        return {"error": "Mfumo wa Elixa AI kwa sasa uko kwenye marekebisho mafupi ya kusanidi huduma. Tafadhali jaribu tena baada ya muda mfupi."}
 
     if key_index >= len(GEMINI_KEYS):
-        return {"error": "Mfumo umezidiwa au keys zote hazina salio. Jaribu tena."}
+        return {"error": "Elixa AI inapokea maombi mengi kwa wakati mmoja hivi sasa. Tafadhali subiri sekunde chache kisha jaribu tena."}
 
     api_key = GEMINI_KEYS[key_index]
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={api_key}"
@@ -130,12 +130,12 @@ def call_gemini_api(history, key_index=0):
                 ai_response = data["candidates"][0]["content"]["parts"][0]["text"]
                 return {"success": True, "text": ai_response}
             except Exception as e:
-                return {"error": "Imeshindwa kusoma matokeo kutoka kwa AI."}
+                return {"error": "Elixa AI haikuweza kuchanganua jibu hili kwa wakati. Tafadhali jaribu tena au ubadilishe maelezo yako kidogo."}
         else:
-            return {"error": f"Hitilafu kutoka Gemini API: {response.status_code}"}
+            return {"error": "Elixa AI inakumbana na msongamano wa maombi kwa sasa. Tafadhali jaribu tena baada ya muda mfupi."}
             
     except requests.exceptions.RequestException:
-        return {"error": "Hitilafu ya mtandao imetokea."}
+        return {"error": "Kuna tatizo la muunganiko wa mtandao. Tafadhali hakikisha mtandao wako uko sawa kisha ujaribu tena."}
 
 # ================= AUTHENTICATION ROUTES =================
 
@@ -220,7 +220,7 @@ def set_name():
         }
     ]
     
-    welcome_msg = f"Habari {name}! Mimi ni msaidizi wako wa kuchora na kuchanganua michoro ya mfumo (System Architecture & Diagrams). Niambie ungependa kuchora mfumo gani leo au pakia picha ya mchoro ulio nao."
+    welcome_msg = f"Habari {name}! Mimi ni Elixa AI, msaidizi wako wa kuchora na kuchanganua michoro ya mfumo (System Architecture & Diagrams). Niambie ungependa kuchora mfumo gani leo au pakia picha ya mchoro ulio nao."
     
     return jsonify({
         "status": "success", 
@@ -250,7 +250,7 @@ def process():
         compressed_bytes = compress_image(raw_bytes)
         
         if not compressed_bytes:
-            return jsonify({"error": "Imeshindwa kusoma na kubana picha hii."}), 400
+            return jsonify({"error": "Imeshindwa kusoma na kubana picha hii. Tafadhali jaribu picha nyingine."}), 400
             
         base64_data = base64.b64encode(compressed_bytes).decode("utf-8")
         
@@ -284,7 +284,7 @@ def process():
     if len(history) > 20:
         history = history[-20:]
 
-    # Request Gemini execution
+    # Request execution
     result = call_gemini_api(history)
     
     if "error" in result:
