@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWAI FARM - Rice Disease Detector</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col justify-between">
+
+    <!-- Header Section -->
+    <header class="bg-emerald-700 text-white shadow-md py-4 sm:py-6">
+        <div class="max-w-4xl mx-auto px-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-seedling text-2xl sm:text-3xl text-emerald-300"></i>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-bold tracking-tight">SWAI FARM: Rice Disease Detector</h1>
+                    <p class="text-[10px] sm:text-xs text-emerald-100">Rice Disease Detector</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="bg-emerald-800/80 text-[10px] sm:text-xs px-2.5 py-1 rounded-full font-mono text-emerald-200">Cutoff: 80%</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 py-6 sm:py-10 w-full flex-grow">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            
+            <!-- Left Side: Interactive Upload & Camera Area -->
+            <section class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base sm:text-lg font-semibold mb-4 text-slate-700">Select Leaf Image</h2>
+                    
+                    <!-- Mode Selector Buttons -->
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <button type="button" id="uploadModeBtn" class="py-2 px-3 rounded-lg text-xs sm:text-sm font-medium border-2 border-emerald-600 bg-emerald-50 text-emerald-700 flex items-center justify-center space-x-1.5 transition">
+                            <i class="fa-solid fa-file-image"></i>
+                            <span>Upload File</span>
+                        </button>
+                        <button type="button" id="cameraModeBtn" class="py-2 px-3 rounded-lg text-xs sm:text-sm font-medium border border-slate-200 hover:border-emerald-600 text-slate-600 hover:text-emerald-700 flex items-center justify-center space-x-1.5 transition">
+                            <i class="fa-solid fa-camera"></i>
+                            <span>Use Camera</span>
+                        </button>
+                    </div>
+
+                    <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
+                        <!-- File Upload Box -->
+                        <div id="dropZone" class="border-2 border-dashed border-emerald-300 rounded-xl p-6 sm:p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/20 transition duration-200 relative">
+                            <input type="file" id="fileInput" name="file" accept="image/*" class="hidden">
+                            
+                            <!-- Initial Drag & Drop View -->
+                            <div id="uploadPrompt" class="space-y-3">
+                                <i class="fa-solid fa-cloud-arrow-up text-4xl sm:text-5xl text-slate-400"></i>
+                                <div class="text-xs sm:text-sm">
+                                    <span class="font-semibold text-emerald-600">Click to upload</span> or drag and drop
+                                </div>
+                                <p class="text-[10px] sm:text-xs text-slate-400">Supports JPG, JPEG, or PNG</p>
+                            </div>
+
+                            <!-- Live Preview Frame -->
+                            <div id="previewContainer" class="hidden space-y-3">
+                                <img id="imagePreview" src="#" alt="Preview" class="max-h-48 sm:max-h-60 mx-auto rounded-lg shadow-sm border">
+                                <button type="button" id="removeBtn" class="text-xs text-red-500 hover:text-red-700 font-semibold flex items-center justify-center mx-auto space-x-1">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                    <span>Change Image</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Camera Streaming Container (Hidden by default) -->
+                        <div id="cameraContainer" class="hidden border rounded-xl overflow-hidden bg-slate-900 relative">
+                            <video id="video" class="w-full h-auto max-h-64 object-cover" autoplay playsinline></video>
+                            <div class="p-3 bg-slate-800 flex justify-between items-center">
+                                <button type="button" id="captureBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold py-1.5 px-3 rounded-lg flex items-center space-x-1">
+                                    <i class="fa-solid fa-circle-dot"></i>
+                                    <span>Capture</span>
+                                </button>
+                                <button type="button" id="stopCameraBtn" class="text-slate-400 hover:text-white text-xs font-semibold">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="analyzeBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-xl shadow-md transition duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i>
+                            <span>Analyze Plant Health</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Right Side: Real-Time Results Output -->
+            <section class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base sm:text-lg font-semibold mb-4 text-slate-700">Diagnosis Report</h2>
+                    
+                    <!-- Welcome Placeholder -->
+                    <div id="placeholderResult" class="text-center py-12 sm:py-16 space-y-3 text-slate-400">
+                        <i class="fa-solid fa-file-medical text-4xl sm:text-5xl"></i>
+                        <p class="text-xs sm:text-sm px-4">Upload or capture an image of a rice leaf to generate a real-time health analysis.</p>
+                    </div>
+
+                    <!-- Spinning Loader -->
+                    <div id="loader" class="hidden text-center py-16 sm:py-20 space-y-4">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 border-4 border-slate-200 border-t-emerald-600"></div>
+                        <p class="text-xs sm:text-sm text-slate-500 font-medium">Processing analysis...</p>
+                    </div>
+
+                    <!-- Rejected Warning Alert -->
+                    <div id="rejectionCard" class="hidden bg-amber-50 border-l-4 border-amber-500 p-4 sm:p-5 rounded-r-xl space-y-3">
+                        <div class="flex items-center space-x-2 text-amber-800 font-semibold text-sm sm:text-base">
+                            <i class="fa-solid fa-circle-exclamation text-lg sm:text-xl"></i>
+                            <span>Image Rejected (Low Confidence)</span>
+                        </div>
+                        <p id="rejectionText" class="text-xs sm:text-sm text-amber-700"></p>
+                        <div class="text-[10px] sm:text-xs font-mono text-amber-600 bg-amber-100/60 p-2 rounded">
+                            Identified Confidence: <span id="rejectedConf"></span> (Threshold: 80.0%)
+                        </div>
+                    </div>
+
+                    <!-- Successful Diagnostic Results -->
+                    <div id="successCard" class="hidden space-y-5 sm:space-y-6">
+                        <div class="flex justify-between items-start border-b pb-3 sm:pb-4">
+                            <div>
+                                <span class="text-[10px] uppercase tracking-wider font-semibold text-emerald-600">Detected Condition</span>
+                                <h3 id="resultLabel" class="text-xl sm:text-2xl font-bold text-slate-800"></h3>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Confidence</span>
+                                <div id="resultConfidence" class="text-lg sm:text-xl font-bold text-emerald-600"></div>
+                            </div>
+                        </div>
+
+                        <!-- Cause Details -->
+                        <div class="space-y-1">
+                            <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Primary Cause</span>
+                            <p id="resultCause" class="text-xs sm:text-sm text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100"></p>
+                        </div>
+
+                        <!-- Action Recommendations -->
+                        <div class="space-y-2">
+                            <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Recommended Actions</span>
+                            <ul id="resultMeasures" class="space-y-1.5 text-xs sm:text-sm text-slate-600 pl-4 list-disc marker:text-emerald-500"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center pt-4 text-[10px] sm:text-xs text-slate-400 border-t mt-6">
+                    Please use high-quality pictures of isolated leaves for maximum precision.
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Canvas iliyofichwa kwa ajili ya ku-capture picha toka kwenye stream -->
+    <canvas id="canvas" class="hidden"></canvas>
+
+    <!-- Interactive JS Processing logic -->
+    <script>
+        // HTML Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const removeBtn = document.getElementById('removeBtn');
+        const uploadForm = document.getElementById('uploadForm');
+
+        // Mode Switching
+        const uploadModeBtn = document.getElementById('uploadModeBtn');
+        const cameraModeBtn = document.getElementById('cameraModeBtn');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const video = document.getElementById('video');
+        const captureBtn = document.getElementById('captureBtn');
+        const stopCameraBtn = document.getElementById('stopCameraBtn');
+        const canvas = document.getElementById('canvas');
+
+        // Results Section
+        const placeholderResult = document.getElementById('placeholderResult');
+        const loader = document.getElementById('loader');
+        const rejectionCard = document.getElementById('rejectionCard');
+        const successCard = document.getElementById('successCard');
+
+        let stream = null;
+        let capturedBlob = null; // Kutunza picha ya kamera ikipigwa
+
+        // --- CAMERA INTEGRATION ---
+        
+        async function startCamera() {
+            try {
+                // Tunazima dropzone preview ya zamani kwanza
+                resetImageSelection();
+                
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" }, // Inatumia back camera kwenye simu
+                    audio: false 
+                });
+                video.srcObject = stream;
+                cameraContainer.classList.remove('hidden');
+                dropZone.classList.add('hidden');
+                
+                // Kubadili madoido ya buttons
+                cameraModeBtn.className = "py-2 px-3 rounded-lg text-xs sm:text-sm font-medium border-2 border-emerald-600 bg-emerald-50 text-emerald-700 flex items-center justify-center space-x-1.5 transition";
+                uploadModeBtn.className = "py-2 px-3 rounded-lg text-xs sm:text-sm font-medium border border-slate-200 hover:border-emerald-600 text-slate-600 hover:text-emerald-700 flex items-center justify-center space-x-1.5 transition";
+            } catch (err) {
+                alert("Haikuweza kufungua kamera. Tafadhali ruhusu matumizi ya kamera au pakia file.");
+                switchToUploadMode();
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                stream = null;
+            }
+            cameraContainer.classList.add('hidden');
+        }
+
+        function switchToUploadMode() {
+            stopCamera();
+            dropZone.classList.remove('hidden');
+            uploadModeBtn.className = "py-2 px-3 rounded-lg text-xs sm:text-sm font-medium border-2 border-emerald-600 bg-emerald-50 text-emerald-700 flex items-center justify-center space-x-1.5 transition";
+            cameraModeBtn.className = "py-2 px-3 rounded-lg text-xs sm:text-sm font-medium border border-slate-200 hover:border-emerald-600 text-slate-600 hover:text-emerald-700 flex items-center justify-center space-x-1.5 transition";
+        }
+
+        // Mode triggers
+        uploadModeBtn.addEventListener('click', switchToUploadMode);
+        cameraModeBtn.addEventListener('click', startCamera);
+        stopCameraBtn.addEventListener('click', switchToUploadMode);
+
+        // Capture picha kutoka kwenye video stream
+        captureBtn.addEventListener('click', () => {
+            if (!stream) return;
+            
+            // Set vipimo vya canvas kuendana na video stream
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Badilisha picha kuwa Blob ili iweze kutumika kama file
+            canvas.toBlob((blob) => {
+                capturedBlob = blob;
+                const imageUrl = URL.createObjectURL(blob);
+                
+                // Onyesha preview ya picha iliyopigwa
+                imagePreview.src = imageUrl;
+                uploadPrompt.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+                
+                // Zima camera stream na rudi kwenye file mode
+                switchToUploadMode();
+            }, 'image/jpeg', 0.9);
+        });
+
+        // --- FILE DRAG & DROP LOGIC ---
+
+        dropZone.addEventListener('click', () => {
+            if (dropZone.classList.contains('hidden')) return;
+            fileInput.click();
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-emerald-500', 'bg-emerald-50/40');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-emerald-500', 'bg-emerald-50/40');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-emerald-500', 'bg-emerald-50/40');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                capturedBlob = null; // Futa picha ya kamera ya zamani kama ipo
+                handleFileSelection(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                capturedBlob = null; // Futa picha ya kamera ya zamani kama ipo
+                handleFileSelection(fileInput.files[0]);
+            }
+        });
+
+        function handleFileSelection(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                uploadPrompt.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetImageSelection() {
+            fileInput.value = '';
+            capturedBlob = null;
+            imagePreview.src = '#';
+            previewContainer.classList.add('hidden');
+            uploadPrompt.classList.remove('hidden');
+        }
+
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetImageSelection();
+        });
+
+        // --- SUBMIT TO FLASK ---
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const hasFile = fileInput.files.length > 0;
+            const hasCapturedPhoto = capturedBlob !== null;
+
+            if (!hasFile && !hasCapturedPhoto) {
+                alert('Tafadhali pakia picha au piga picha kwanza kwa kutumia kamera!');
+                return;
+            }
+
+            // Ficha matokeo ya zamani, weka loader
+            placeholderResult.classList.add('hidden');
+            rejectionCard.classList.add('hidden');
+            successCard.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            const formData = new FormData();
+            
+            if (hasCapturedPhoto) {
+                // Kama mtumiaji alipiga picha kwa kamera, tunatuma ule blob tuliohifadhi
+                formData.append('file', capturedBlob, 'captured_leaf.jpg');
+            } else {
+                // Kama alipakia file
+                formData.append('file', fileInput.files[0]);
+            }
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                loader.classList.add('hidden');
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    placeholderResult.classList.remove('hidden');
+                    return;
+                }
+
+                if (data.rejected) {
+                    document.getElementById('rejectionText').innerText = data.message;
+                    document.getElementById('rejectedConf').innerText = data.confidence;
+                    rejectionCard.classList.remove('hidden');
+                } else {
+                    document.getElementById('resultLabel').innerText = data.class;
+                    document.getElementById('resultConfidence').innerText = data.confidence;
+                    document.getElementById('resultCause').innerText = data.cause;
+
+                    const listContainer = document.getElementById('resultMeasures');
+                    listContainer.innerHTML = '';
+                    data.measures.forEach(measure => {
+                        const li = document.createElement('li');
+                        li.innerText = measure;
+                        listContainer.appendChild(li);
+                    });
+
+                    successCard.classList.remove('hidden');
+                }
+
+            } catch (err) {
+                loader.classList.add('hidden');
+                placeholderResult.classList.remove('hidden');
+                alert('Imefeli kuunganishwa na Flask server. Hakikisha app.py inakimbia.');
+            }
+        });
+    </script>
+</body>
+</html>

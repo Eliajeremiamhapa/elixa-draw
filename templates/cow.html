@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐄 Elixa Cow Weight Expert AI</title>
+    <!-- Tailwind CSS for modern, adaptive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Marked.js to handle Markdown conversion seamlessly in place of Markwon -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .bubble-user {
+            background-color: #FFFFFF;
+            border: 1px solid #D1D5DB;
+            color: #000000;
+            border-radius: 20px 20px 5px 20px;
+        }
+        .bubble-ai {
+            background-color: #1E293B;
+            color: #FFFFFF;
+            border-radius: 5px 20px 20px 20px;
+        }
+        /* Custom scroll behavior */
+        .chat-scroll {
+            scrollbar-width: thin;
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col justify-between font-sans">
+
+    <!-- Top Bar -->
+    <header class="bg-slate-900 text-white py-4 px-6 shadow-md flex justify-between items-center sticky top-0 z-50">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+            <span>🐄</span> {{ app_name }}
+        </h1>
+        <button id="btnClear" class="text-xs bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-3 rounded-lg transition-all" title="Utafuta historia yote (Long Click Equivalent)">
+            Futa Chat
+        </button>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 w-full max-w-4xl mx-auto p-4 flex flex-col overflow-hidden h-[calc(100vh-140px)]">
+        
+        <!-- Chat Area -->
+        <div id="chatContainer" class="flex-1 overflow-y-auto chat-scroll space-y-4 p-4 bg-white rounded-xl border border-gray-200 shadow-inner">
+            <!-- Dynamic Messages will load here -->
+        </div>
+
+        <!-- Working Status Indicator -->
+        <div id="statusMsg" class="hidden text-sm text-slate-500 italic py-1 px-4 animate-pulse flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+            <span id="statusText">● Elixa AI inajiandaa...</span>
+        </div>
+
+        <!-- Attachment and Image preview -->
+        <div id="imagePreviewCard" class="hidden relative p-2 bg-gray-100 rounded-lg border border-dashed border-gray-300 mt-2 max-w-[200px]">
+            <img id="imgPreview" class="rounded object-cover max-h-32 w-full" src="" alt="Preview">
+            <button id="btnRemoveImage" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 text-xs hover:bg-red-700 shadow-lg" title="Ondoa Picha">
+                ✕
+            </button>
+            <div id="fileNameDisplay" class="text-xs text-gray-500 mt-1 truncate">📎 Image Loaded Successfully</div>
+        </div>
+
+        <!-- Input Bar Form -->
+        <form id="processForm" class="mt-3 flex items-center gap-2 bg-white p-2 rounded-xl border border-gray-200 shadow-md">
+            <!-- Camera / Attachment Toggle -->
+            <button type="button" id="btnAttach" class="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors" title="Pakia au Piga picha">
+                📷
+            </button>
+            <input type="file" id="fileInput" name="image" accept="image/*" class="hidden">
+            <input type="file" id="cameraInput" name="cameraImage" accept="image/*" capture="environment" class="hidden">
+
+            <input type="text" id="promptInput" name="prompt" placeholder="Andika hapa au pakia picha ya ng'ombe..." class="flex-1 border-0 focus:ring-0 focus:outline-none text-base px-2">
+            
+            <button type="submit" id="btnProcess" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                Tuma
+            </button>
+        </form>
+    </main>
+
+    <!-- Name Prompt Modal (Karibu Identity Dialog) -->
+    <div id="nameModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
+            <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                🐄 Cow Weight Expert Identity
+            </h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Karibu. Ingiza jina lako tuanze makadirio ya uzito wa ng'ombe wako:
+            </p>
+            <input type="text" id="nameInput" placeholder="Jina lako hapa..." class="w-full border border-gray-300 rounded-lg p-2.5 mb-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none capitalize">
+            <button id="btnSaveName" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-lg hover:bg-indigo-700 transition-all">
+                Anza
+            </button>
+        </div>
+    </div>
+
+    <!-- Page Logic Integration -->
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const promptInput = document.getElementById('promptInput');
+        const statusMsg = document.getElementById('statusMsg');
+        const statusText = document.getElementById('statusText');
+        const imagePreviewCard = document.getElementById('imagePreviewCard');
+        const imgPreview = document.getElementById('imgPreview');
+        const btnRemoveImage = document.getElementById('btnRemoveImage');
+        const btnAttach = document.getElementById('btnAttach');
+        const fileInput = document.getElementById('fileInput');
+        const cameraInput = document.getElementById('cameraInput');
+        const btnProcess = document.getElementById('btnProcess');
+        const processForm = document.getElementById('processForm');
+        const nameModal = document.getElementById('nameModal');
+        const nameInput = document.getElementById('nameInput');
+        const btnSaveName = document.getElementById('btnSaveName');
+        const btnClear = document.getElementById('btnClear');
+
+        let isGenerating = false;
+        let selectedFile = null;
+
+        // On Load checks for User session name
+        window.onload = () => {
+            const userName = localStorage.getItem('user_name_2026');
+            if (!userName) {
+                nameModal.classList.remove('hidden');
+            } else {
+                nameModal.classList.add('hidden');
+                // Call server to ensure session contains username and initial messages
+                sendNameToServer(userName);
+            }
+        };
+
+        btnSaveName.addEventListener('click', () => {
+            let name = nameInput.value.trim();
+            if(!name) name = "Mfugaji";
+            localStorage.setItem('user_name_2026', name);
+            nameModal.classList.add('hidden');
+            sendNameToServer(name);
+        });
+
+        function sendNameToServer(name) {
+            fetch('/set_name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    // Populate initial system welcome
+                    addMessageBubble("Elixa AI", data.welcome_message, false);
+                }
+            });
+        }
+
+        // Image Selection Modal
+        btnAttach.addEventListener('click', () => {
+            const selectSource = confirm("Chagua Chanzo cha Picha:\nOK - Piga Picha (Camera)\nCancel - Chagua kutoka Storage (Gallery)");
+            if (selectSource) {
+                cameraInput.click();
+            } else {
+                fileInput.click();
+            }
+        });
+
+        // Set visual file preview
+        function handleFile(input) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imgPreview.src = e.target.result;
+                    imagePreviewCard.classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        fileInput.addEventListener('change', () => handleFile(fileInput));
+        cameraInput.addEventListener('change', () => handleFile(cameraInput));
+
+        btnRemoveImage.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = "";
+            cameraInput.value = "";
+            imagePreviewCard.classList.add('hidden');
+        });
+
+        // Clear History Handler
+        btnClear.addEventListener('click', () => {
+            if (confirm("Je, una uhakika unataka kufuta historia ya mazungumzo?")) {
+                fetch('/clear', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    chatContainer.innerHTML = "";
+                    alert(data.message);
+                    location.reload();
+                });
+            }
+        });
+
+        // Form Submit Execution
+        processForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (isGenerating) return;
+
+            const promptText = promptInput.value.trim();
+            if (!promptText && !selectedFile) return;
+
+            // Render user bubble first
+            if (promptText) {
+                addMessageBubble("User", promptText, false);
+            }
+
+            // Prepare Payload
+            const formData = new FormData();
+            formData.append('prompt', promptText);
+            if (selectedFile) {
+                formData.append('image', selectedFile);
+            }
+
+            // UI Reset states
+            promptInput.value = "";
+            selectedFile = null;
+            fileInput.value = "";
+            cameraInput.value = "";
+            imagePreviewCard.classList.add('hidden');
+
+            isGenerating = true;
+            statusMsg.classList.remove('hidden');
+            statusText.innerText = "● Elixa AI inachambua picha ya ng'ombe na kukadiria uzito...";
+            btnProcess.innerText = "Inasubiri...";
+
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                isGenerating = false;
+                statusMsg.classList.add('hidden');
+                btnProcess.innerText = "Tuma";
+
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    addMessageBubble("Elixa AI", data.response, true);
+                }
+            })
+            .catch(err => {
+                isGenerating = false;
+                statusMsg.classList.add('hidden');
+                btnProcess.innerText = "Tuma";
+                alert("Hitilafu ya mtandao imetokea.");
+            });
+        });
+
+        // Build and render chat bubbles
+        function addMessageBubble(sender, text, animate) {
+            const isUser = (sender === 'User');
+            
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `flex w-full ${isUser ? 'justify-end' : 'justify-start'}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-xl p-4 shadow-sm text-sm ${isUser ? 'bubble-user' : 'bubble-ai'}`;
+
+            messageWrapper.appendChild(bubble);
+            chatContainer.appendChild(messageWrapper);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            if (animate && !isUser) {
+                // Typographic scrolling engine (mimics the Android 10-char chunk timer method)
+                let index = 0;
+                const chunk = 10;
+                
+                function type() {
+                    if (index < text.length) {
+                        index = Math.min(index + chunk, text.length);
+                        // Renders Markdown conversion instantly
+                        bubble.innerHTML = marked.parse(text.substring(0, index));
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                        setTimeout(type, 1);
+                    } else {
+                        statusText.innerText = "✓ Makadirio tayari";
+                        setTimeout(() => statusMsg.classList.add('hidden'), 1000);
+                    }
+                }
+                type();
+            } else {
+                bubble.innerHTML = marked.parse(text);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>

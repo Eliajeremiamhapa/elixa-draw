@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CloudLab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .navbar {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar h2 {
+            font-size: 1.5rem;
+        }
+        
+        .logout-btn {
+            background: #333;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .logout-btn:hover {
+            background: #555;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .create-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .create-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .create-form {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        select {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            background: white;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .section-title {
+            margin: 20px 0;
+            color: #333;
+        }
+        
+        .vms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .vm-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .vm-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .vm-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .vm-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-stopped {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .vm-info {
+            margin: 10px 0;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .vm-info div {
+            margin: 5px 0;
+        }
+        
+        .password {
+            font-family: monospace;
+            background: #f5f5f5;
+            padding: 3px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .vm-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .vm-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+        }
+        
+        .btn-open {
+            background: #007bff;
+        }
+        
+        .btn-open:hover {
+            background: #0056b3;
+        }
+        
+        .btn-stop {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-stop:hover {
+            background: #e0a800;
+        }
+        
+        .btn-terminate {
+            background: #dc3545;
+        }
+        
+        .btn-terminate:hover {
+            background: #c82333;
+        }
+        
+        .empty-state {
+            background: white;
+            padding: 50px;
+            text-align: center;
+            border-radius: 10px;
+            color: #666;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 10px 15px;
+            }
+            .navbar h2 {
+                font-size: 1.2rem;
+            }
+            .container {
+                padding: 0 15px;
+            }
+            .vms-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h2>☁️ CloudLab - {{ student_name }}</h2>
+        <button class="logout-btn" onclick="window.location.href='/logout'">Logout</button>
+    </div>
+    
+    <div class="container">
+        <div class="create-section">
+            <h3>🚀 Unda Lab Mpya</h3>
+            <p style="color: #666; margin-bottom: 15px;">Chagua mfumo wa uendeshaji kwa maabara yako</p>
+            <div class="create-form">
+                <select id="osType">
+                    <option value="windows">🪟 Windows Server 2025 (8GB RAM, 100GB)</option>
+                    <option value="ubuntu">🐧 Ubuntu 22.04 LTS (8GB RAM, 100GB)</option>
+                </select>
+                <button id="createBtn" onclick="createLab()">✨ Anza Lab - Bure!</button>
+            </div>
+        </div>
+        
+        <h3 class="section-title">📚 Maabara Zangu</h3>
+        <div id="vmsContainer" class="vms-grid">
+            {% if vms %}
+                {% for vm in vms %}
+                <div class="vm-card" data-vm-id="{{ vm.vm_id }}">
+                    <h3>🖥️ Lab: {{ vm.vm_id[:20] }}...</h3>
+                    <span class="vm-status status-{{ vm.status }}">{{ vm.status | upper }}</span>
+                    <div class="vm-info">
+                        <div>📅 Imeundwa: {{ vm.created_at[:10] }}</div>
+                        <div>💻 OS: {{ vm.os_type | title }}</div>
+                        <div>🌐 IP: {{ vm.ip }}</div>
+                        <div>🔑 Password: <span class="password">{{ vm.password }}</span></div>
+                    </div>
+                    <div class="vm-actions">
+                        <button class="btn-open" onclick="openLab('{{ vm.vm_id }}')">🔓 Fungua Desktop</button>
+                        <button class="btn-terminate" onclick="terminateLab('{{ vm.vm_id }}')">🗑️ Futa Lab</button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>📭 Huna lab yoyote bado.</p>
+                    <p style="margin-top: 10px;">Bonyeza "Anza Lab" kuunda maabara yako ya kwanza!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        // Function ya kuunda lab mpya
+        async function createLab() {
+            const osType = document.getElementById('osType').value;
+            const btn = document.getElementById('createBtn');
+            const originalText = btn.textContent;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Inaunda... Sekunde 30-60';
+            
+            showToast('🚀 Inaunda maabara yako... Tafadhali subiri sekunde 30-60.', 'info');
+            
+            try {
+                const response = await fetch('/api/create-lab', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        os_type: osType, 
+                        lab_name: 'lab_' + Date.now()
+                    })
+                });
+                
+                // Angalia kama response ni JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server imerudisha error. Tafadhali jaribu tena.');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('✅ Lab imeundwa! Ukurasa utaisha upya...', 'success');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showToast('❌ Error: ' + (data.error || 'Tatizo lisilojulikana'), 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showToast('❌ Imeshindwa: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+        
+        // Function ya kufungua lab kwenye window mpya
+        function openLab(vmId) {
+            showToast('🔓 Inafungua desktop yako... Subiri sekunde chache.', 'info');
+            window.open(`/lab/${vmId}`, '_blank');
+        }
+        
+        // Function ya kufuta lab kabisa
+        async function terminateLab(vmId) {
+            if (!confirm('⚠️ UNA UHAKIKA? Hii itafuta maabara yako KABISA!\nProgramu zote na faili zako zitapotea. Huwezi kurejesha.')) {
+                return;
+            }
+            
+            showToast('🗑️ Inafuta maabara yako...', 'warning');
+            
+            try {
+                const response = await fetch('/api/terminate-lab', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({vm_id: vmId})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('✅ Lab imefutwa! Ukurasa utaisha upya...', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('❌ Error: ' + (data.error || 'Imeshindwa kufuta'), 'error');
+                }
+            } catch (error) {
+                showToast('❌ Imeshindwa: ' + error.message, 'error');
+            }
+        }
+        
+        // Function ya kuonyesha toast (notification)
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            
+            // Rangi tofauti kwa aina tofauti za ujumbe
+            if (type === 'error') {
+                toast.style.background = '#dc3545';
+            } else if (type === 'success') {
+                toast.style.background = '#28a745';
+            } else if (type === 'warning') {
+                toast.style.background = '#ffc107';
+                toast.style.color = '#333';
+            } else {
+                toast.style.background = '#333';
+                toast.style.color = 'white';
+            }
+            
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+                // Rejesha rangi default
+                toast.style.background = '#333';
+                toast.style.color = 'white';
+            }, 5000);
+        }
+        
+        // Refresh VM status every 30 seconds
+        setInterval(() => {
+            // Hii inaweza kuongeza API ya kuangalia status
+            console.log('Checking VM status...');
+        }, 30000);
+        
+        // Copy password kwenye clipboard (optional)
+        function copyPassword(password) {
+            navigator.clipboard.writeText(password);
+            showToast('🔑 Nenosiri limenakiliwa!', 'success');
+        }
+    </script>
+</body>
+</html>

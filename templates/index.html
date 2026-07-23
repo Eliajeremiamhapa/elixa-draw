@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software & Database Diagram AI Generator</title>
+    
+    <!-- Maktaba za Mermaid (Mchoro) na Marked (Markdown Reader) -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0F172A;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #1E293B;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Top Header */
+        .top-bar {
+            background-color: #0F172A;
+            color: #F8FAFC;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .title-area h1 {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #38BDF8;
+        }
+
+        .status {
+            color: #94A3B8;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background-color: #22C55E;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #22C55E;
+        }
+
+        .status-indicator.busy {
+            background-color: #EAB308;
+            box-shadow: 0 0 8px #EAB308;
+        }
+
+        /* Chat Window */
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background-color: #0F172A;
+        }
+
+        .message {
+            max-width: 90%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 15px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #0284C7;
+            color: #FFFFFF;
+            border-bottom-right-radius: 2px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background-color: #1E293B;
+            color: #F1F5F9;
+            border: 1px solid #334155;
+            border-bottom-left-radius: 2px;
+        }
+
+        /* Container ya Mchoro na Download Button */
+        .diagram-wrapper {
+            position: relative;
+            background: #FFFFFF;
+            border-radius: 8px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+            padding: 16px;
+            padding-top: 45px; /* Nafasi ya kitufe cha download */
+        }
+
+        .download-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #0284C7;
+            color: #FFFFFF;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+            width: auto;
+            height: auto;
+        }
+
+        .download-btn:hover {
+            background-color: #0369A1;
+        }
+
+        /* Box la Mchoro/Diagram */
+        .mermaid-box {
+            overflow-x: auto;
+            color: #000;
+            text-align: center;
+        }
+
+        /* Bottom Input Form */
+        .input-area {
+            padding: 16px;
+            background-color: #1E293B;
+            border-top: 1px solid #334155;
+        }
+
+        .input-card {
+            display: flex;
+            align-items: center;
+            background: #0F172A;
+            border-radius: 25px;
+            padding: 6px 12px;
+            border: 1px solid #334155;
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 10px;
+            font-size: 15px;
+            resize: none;
+            background: transparent;
+            color: #F8FAFC;
+        }
+
+        button {
+            background-color: #0284C7;
+            color: white;
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0369A1;
+        }
+
+        button:disabled {
+            background-color: #475569;
+            cursor: not-allowed;
+        }
+
+        .footer-credit {
+            text-align: center;
+            font-size: 11px;
+            color: #64748B;
+            margin-top: 8px;
+        }
+
+        .footer-credit a {
+            color: #38BDF8;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="top-bar">
+            <div class="title-area">
+                <h1>SOFTWARE & DATABASE DIAGRAM AI</h1>
+                <span id="status-msg" class="status">CONNECTED | READY</span>
+            </div>
+            <div class="status-indicator" id="status-indicator"></div>
+        </header>
+
+        <!-- Chat Output Zone -->
+        <main class="chat-container" id="chat-container">
+            <div class="message ai-message">
+                Habari! Mimi ni mtaalamu wa Database na Software Architecture.<br> 
+                Ruksa kuniomba michoro kama: <b>ERD, Use Case, Sequence, Class Diagram, Flowchart, na Architecture Context Diagrams</b>.
+            </div>
+        </main>
+
+        <!-- Input Area -->
+        <footer class="input-area">
+            <form id="chat-form" class="input-card">
+                <textarea id="prompt-input" placeholder="Eleza mfumo wako (mfano: Nipe Use Case Diagram na ERD ya E-Commerce)..." rows="1" required></textarea>
+                <button type="submit" id="send-btn">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+                    </svg>
+                </button>
+            </form>
+            <p class="footer-credit">
+                Elixa AI Architecture Systems | 📞 0692416596 | ✉️ <a href="mailto:eliamhapa34@gmail.com">eliamhapa34@gmail.com</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            mermaid.initialize({ startOnLoad: false, theme: 'default' });
+
+            const chatForm = document.getElementById("chat-form");
+            const promptInput = document.getElementById("prompt-input");
+            const sendBtn = document.getElementById("send-btn");
+            const statusMsg = document.getElementById("status-msg");
+            const statusIndicator = document.getElementById("status-indicator");
+
+            let isGenerating = false;
+
+            promptInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    chatForm.requestSubmit();
+                }
+            });
+
+            chatForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const userPrompt = promptInput.value.trim();
+
+                if (!userPrompt || isGenerating) return;
+
+                appendMessage("User", userPrompt);
+                promptInput.value = "";
+                
+                isGenerating = true;
+                sendBtn.disabled = true;
+                statusMsg.innerText = "INACHORA MCHORO...";
+                statusIndicator.classList.add("busy");
+
+                // Tumia FormData ilingane kikamilifu na Flask /process backend
+                const formData = new FormData();
+                formData.append("prompt", userPrompt);
+
+                try {
+                    const response = await fetch("/process", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.response) {
+                        await renderAiResponse(data.response);
+                    } else {
+                        appendMessage("AI", data.error || "Imeshindwa kupata majibu kutoka kwa server.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    appendMessage("AI", "Hitilafu ya mtandao au server haipatikani.");
+                } finally {
+                    resetUIState();
+                }
+            });
+
+            async function renderAiResponse(fullText) {
+                const chatContainer = document.getElementById("chat-container");
+                const msgDiv = document.createElement("div");
+                msgDiv.className = "message ai-message";
+
+                // Gawanya majibu kwa mpangilio sahihi wa maandishi na michoro ya Mermaid
+                const parts = fullText.split(/(```mermaid[\s\S]*?```)/g);
+
+                chatContainer.appendChild(msgDiv);
+
+                for (const part of parts) {
+                    if (part.startsWith("```mermaid")) {
+                        const code = part.replace(/```mermaid|```/g, "").trim();
+                        
+                        // Wrapper ya Diagram na Kitufe cha Download
+                        const wrapperDiv = document.createElement("div");
+                        wrapperDiv.className = "diagram-wrapper";
+
+                        // Kitufe cha kudownload
+                        const downloadBtn = document.createElement("button");
+                        downloadBtn.className = "download-btn";
+                        downloadBtn.innerHTML = `
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download SVG
+                        `;
+
+                        const mermaidDiv = document.createElement("div");
+                        mermaidDiv.className = "mermaid-box mermaid";
+                        mermaidDiv.textContent = code;
+
+                        wrapperDiv.appendChild(downloadBtn);
+                        wrapperDiv.appendChild(mermaidDiv);
+                        msgDiv.appendChild(wrapperDiv);
+
+                        try {
+                            await mermaid.run({ nodes: [mermaidDiv] });
+
+                            // Weka function ya ku-download mara tu mermaid inapomaliza kurender
+                            downloadBtn.addEventListener("click", () => {
+                                downloadSVG(mermaidDiv, "diagram.svg");
+                            });
+                        } catch (e) {
+                            console.error("Mermaid Render Error:", e);
+                            mermaidDiv.innerHTML = `<span style="color:#EF4444; font-size:12px; font-weight:bold;">Hitilafu ya Kuchora Mchoro (Syntax Error).</span>`;
+                            downloadBtn.style.display = "none";
+                        }
+                    } else if (part.trim() !== "") {
+                        const textDiv = document.createElement("div");
+                        textDiv.innerHTML = marked.parse(part);
+                        msgDiv.appendChild(textDiv);
+                    }
+                }
+
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            // Function ya ku-download SVG
+            function downloadSVG(mermaidContainer, filename) {
+                const svgElement = mermaidContainer.querySelector("svg");
+                if (!svgElement) return;
+
+                // Tengeneza nakala ya SVG ili tuipe staili safi ya background
+                const svgData = new XMLSerializer().serializeToString(svgElement);
+                const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+
+                const downloadLink = document.createElement("a");
+                downloadLink.href = url;
+                downloadLink.download = filename;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(url);
+            }
+
+            function appendMessage(sender, text) {
+                const chatContainer = document.getElementById("chat-container");
+                const msgDiv = document.createElement("div");
+                msgDiv.className = `message ${sender === "User" ? "user-message" : "ai-message"}`;
+                msgDiv.innerText = text;
+                chatContainer.appendChild(msgDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function resetUIState() {
+                isGenerating = false;
+                sendBtn.disabled = false;
+                statusMsg.innerText = "CONNECTED | READY";
+                statusIndicator.classList.remove("busy");
+            }
+        });
+    </script>
+</body>
+</html>

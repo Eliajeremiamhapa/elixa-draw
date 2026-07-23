@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOMATO AI</title>
+    <!-- Tailwind CSS kwa muundo safi na wa haraka -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Marked.js kwa ajili ya kurender Markdown Text kama ilivyokuwa kwenye Flutter -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .user-msg { border-radius: 20px 20px 20px 5px; }
+        .ai-msg { border-radius: 5px 20px 20px 20px; }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] h-screen flex flex-col font-sans">
+
+    <!-- 1. IDENTITY DIALOG (Popup ya Jina) -->
+    <div id="nameModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl transition-all transform scale-100">
+            <h3 class="text-lg font-bold text-[#1E3A1E] mb-2">Tomato AI Identity</h3>
+            <p class="text-gray-600 text-sm mb-4">Karibu. Ingiza jina lako tuanze uchunguzi na utambuzi wa magonjwa ya nyanya:</p>
+            <input type="text" id="nameInput" placeholder="Jina lako hapa..." class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-[#1E3A1E] text-sm mb-4" onkeydown="if(event.key === 'Enter') saveName()">
+            <button onclick="saveName()" class="w-full bg-[#1E3A1E] text-white rounded-lg py-2.5 font-medium hover:bg-opacity-90 transition shadow-md">Anza</button>
+        </div>
+    </div>
+
+    <!-- 2. TOP BAR -->
+    <header class="bg-[#1E3A1E] px-6 py-4 flex items-center justify-between shadow-md text-white shrink-0">
+        <div>
+            <h1 class="text-lg font-black tracking-wide">TOMATO AI</h1>
+            <p id="statusMsg" class="text-[10px] text-[#C8E6C9] font-bold tracking-wider uppercase">CONNECTED | TOMATO PATHOLOGIST AI</p>
+        </div>
+        <div class="w-3 h-3 bg-[#4ADE80] rounded-full animate-pulse"></div>
+    </header>
+
+    <!-- 3. CHAT SCROLL VIEW -->
+    <main id="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Messages zitajazwa hapa kwa kutumia JavaScript -->
+    </main>
+
+    <!-- 4. BOTTOM CONTROL -->
+    <footer class="p-4 bg-transparent shrink-0">
+        <div class="max-w-4xl mx-auto flex flex-col items-center">
+            
+            <!-- PREVIEW YA PICHA -->
+            <div id="imagePreviewContainer" class="hidden flex-col items-center mb-3">
+                <div class="relative w-28 h-28 bg-white p-1 rounded-xl shadow-lg border border-gray-200">
+                    <img id="imagePreview" class="w-full h-full object-cover rounded-xl" src="" alt="Preview">
+                    <button onclick="clearSelectedFile()" class="absolute -top-2 -right-2 bg-[#FF5252] text-white rounded-full p-1 shadow-md hover:bg-opacity-90">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <span class="mt-2 text-[12px] bg-[#E8F5E9] text-[#1B5E20] px-3 py-1 rounded-full font-medium">📎 Scan Ready</span>
+            </div>
+
+            <!-- INPUT MAIN CARD -->
+            <div class="w-full bg-white rounded-full shadow-xl border border-gray-100 p-1.5 flex items-center">
+                <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(this)">
+                <button onclick="document.getElementById('fileInput').click()" class="p-3 text-[#1E3A1E] hover:bg-gray-100 rounded-full transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </button>
+                
+                <input type="text" id="promptInput" onkeydown="if(event.key === 'Enter') startProcessing()" placeholder="Maelezo au swali kuhusu ugonjwa wa jani..." class="flex-1 bg-transparent px-3 outline-none text-gray-800 text-sm md:text-base">
+                
+                <button id="actionBtn" onclick="startProcessing()" oncontextmenu="event.preventDefault(); clearChatHistory();" title="Bofya kutuma | Shikilia kufuta history" class="bg-[#1E3A1E] text-white p-3 rounded-full hover:bg-opacity-90 transition shadow-md">
+                    <svg id="sendIcon" class="w-5 h-5 transform rotate-90" fill="currentColor" viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"></path></svg>
+                    <svg id="stopIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h12V5H6v14z"></path></svg>
+                </button>
+            </div>
+            
+            <p class="mt-2 text-[10px] text-gray-400 font-light">Designed by Tomato AI System</p>
+        </div>
+    </footer>
+
+    <script>
+        let isGenerating = false;
+        let stopRequested = false;
+        let userName = "{{ session.get('user_name', '') }}";
+
+        window.onload = function() {
+            // Kama jina bado halipo kwenye session, baki na popup. Kama lipo, ifiche moja kwa moja.
+            if (!userName || userName === "") {
+                document.getElementById('nameModal').classList.remove('hidden');
+            } else {
+                document.getElementById('nameModal').classList.add('hidden');
+                appendMessage("TOMATO AI", `Karibu tena **${userName}**! Mimi ni mtaalamu wako. Unaweza kuendelea kuniuliza maswali au kuweka picha hapa chini.`, false);
+            }
+        };
+
+        function saveName() {
+            let nameField = document.getElementById('nameInput');
+            let name = nameField.value.trim();
+            
+            if (!name) {
+                alert("Tafadhali ingiza jina lako ili kuendelea!");
+                return;
+            }
+
+            fetch('/set_name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            })
+            .then(res => res.json())
+            .then(data => {
+                userName = data.user_name;
+                // KUFICHA POPUP KIKAMILIFU
+                document.getElementById('nameModal').classList.add('hidden');
+                // Kuandika ujumbe wa kwanza kwenye screen
+                appendMessage("TOMATO AI", data.welcome_message, false);
+            })
+            .catch(err => {
+                alert("Imeshindwa kuhifadhi jina. Jaribu tena.");
+            });
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearSelectedFile() {
+            document.getElementById('fileInput').value = "";
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+        }
+
+        function appendMessage(sender, text, isUser) {
+            let container = document.getElementById('chatContainer');
+            let alignClass = isUser ? 'justify-end' : 'justify-start';
+            let bgClass = isUser ? 'bg-[#E8F5E9] text-[#1B5E20] border border-[#C8E6C9] user-msg' : 'bg-[#1E3A1E] text-white ai-msg';
+            
+            let msgHtml = `
+                <div class="flex ${alignClass} w-full animate-fade-in">
+                    <div class="max-w-[85%] md:max-w-[70%] px-4 py-3 shadow-sm text-sm md:text-base ${bgClass}">
+                        <div class="markdown-body">${marked.parse(text)}</div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', msgHtml);
+            container.scrollTop = container.scrollHeight;
+            return container.lastElementChild.querySelector('.markdown-body');
+        }
+
+        function startProcessing() {
+            let promptField = document.getElementById('promptInput');
+            let userPrompt = promptField.value.trim();
+            let fileInput = document.getElementById('fileInput');
+            let hasFile = fileInput.files && fileInput.files[0];
+
+            if (!userPrompt && !hasFile) return;
+
+            if (isGenerating) {
+                stopRequested = true;
+                setGeneratingState(false);
+                return;
+            }
+
+            stopRequested = false;
+            promptField.value = "";
+
+            if (userPrompt) {
+                appendMessage("User", userPrompt, true);
+            }
+
+            setGeneratingState(true, hasFile ? "● INACHAMBUA AFYA YA JANI KWANZA..." : "● INAANDAA USHAURI WA KITAALAMU...");
+
+            let formData = new FormData();
+            formData.append('prompt', userPrompt);
+            if (hasFile) {
+                formData.append('file', fileInput.files[0]);
+            }
+
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    setGeneratingState(false);
+                    return;
+                }
+
+                if (data.disease_result) {
+                    appendMessage("System", `Matokeo ya Scan ya Nyanya: **${data.disease_result}**`, true);
+                    clearSelectedFile();
+                }
+
+                setGeneratingState(true, "● INAANDAA USHAURI WA KITAALAMU...");
+                addMessageWithTypingEffect("TOMATO AI", data.ai_response);
+            })
+            .catch(err => {
+                if (!stopRequested) alert("Hitilafu imetokea kwenye mawasiliano ya network.");
+                setGeneratingState(false);
+            });
+        }
+
+        function addMessageWithTypingEffect(sender, fullText) {
+            let targetDiv = appendMessage(sender, "", false);
+            let index = 0;
+            
+            let timer = setInterval(() => {
+                if (stopRequested) {
+                    clearInterval(timer);
+                    setGeneratingState(false);
+                    return;
+                }
+
+                if (index < fullText.length) {
+                    index = Math.min(index + 10, fullText.length);
+                    targetDiv.innerHTML = marked.parse(fullText.substring(0, index));
+                    let chatContainer = document.getElementById('chatContainer');
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else {
+                    clearInterval(timer);
+                    setGeneratingState(false);
+                }
+            }, 1); 
+        }
+
+        function setGeneratingState(generating, statusText = "") {
+            isGenerating = generating;
+            let statusField = document.getElementById('statusMsg');
+            let sendIcon = document.getElementById('sendIcon');
+            let stopIcon = document.getElementById('stopIcon');
+
+            if (generating) {
+                statusField.innerText = statusText;
+                sendIcon.classList.add('hidden');
+                stopIcon.classList.remove('hidden');
+            } else {
+                statusField.innerText = "CONNECTED | TOMATO PATHOLOGIST AI";
+                sendIcon.classList.remove('hidden');
+                stopIcon.classList.add('hidden');
+            }
+        }
+
+        function clearChatHistory() {
+            if (confirm("Je, una uhakika unataka kufuta history yote ya mazungumzo?")) {
+                fetch('/clear_history', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('chatContainer').innerHTML = "";
+                    alert(data.message);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

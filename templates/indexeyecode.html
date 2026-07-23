@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EyeGuard AI | Disease Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background"></div>
+    <div class="container">
+        <div class="glass-card">
+            <h1>EyeGuard <span class="ai-text">AI</span></h1>
+            <p class="subtitle">Upload an eye image for instant diagnosis</p>
+            
+            <div class="upload-section">
+                <input type="file" id="imageInput" hidden accept="image/*">
+                <label for="imageInput" class="upload-label">
+                    <div class="upload-icon">📸</div>
+                    <span>Click to Upload Image</span>
+                </label>
+            </div>
+
+            <div id="preview-container" class="hidden">
+                <img id="imagePreview" src="" alt="Preview">
+                <button id="predictBtn" class="btn">Analyze Now</button>
+            </div>
+
+            <div id="loader" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyzing health data...</p>
+            </div>
+
+            <div id="result-card" class="result-box hidden">
+                <h3>Diagnosis Result:</h3>
+                <h2 id="predictionText">---</h2>
+                <p>Confidence: <span id="confidenceText">0%</span></p>
+                <button onclick="location.reload()" class="btn-secondary">New Test</button>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
