@@ -1,5 +1,7 @@
 import os
 import base64
+import time
+import threading
 import requests
 from flask import Flask, render_template, request, jsonify, session
 from io import BytesIO
@@ -20,6 +22,38 @@ GEMINI_KEYS = [
         os.environ.get("GEMINI_API_KEY_3")
     ] if key
 ]
+
+# Keep-Alive Self-Ping Mechanism (Kuzuia Server Isilale)
+def start_keep_alive():
+    """Inagonga server kila baada ya dakika 10 ili kuzuia Render Free Tier isilale."""
+    def ping_self():
+        # Render inatoa URL kwenye env variable ya RENDER_EXTERNAL_URL otomatiki
+        server_url = os.environ.get("RENDER_EXTERNAL_URL", "http://127.0.0.1:5000")
+        ping_endpoint = f"{server_url.rstrip('/')}/ping"
+        
+        # Subiri sekunde 15 server iwe tayari kabla ya ping ya kwanza
+        time.sleep(15)
+        
+        while True:
+            try:
+                response = requests.get(ping_endpoint, timeout=10)
+                print(f"[Keep-Alive] Ping sent to {ping_endpoint} | Status: {response.status_code}")
+            except Exception as e:
+                print(f"[Keep-Alive] Ping failed: {e}")
+            
+            # Subiri dakika 10 (sekunde 600) kabla ya kugonga tena
+            time.sleep(600)
+
+    thread = threading.Thread(target=ping_self, daemon=True)
+    thread.start()
+
+# Anzisha Keep-Alive Thread
+start_keep_alive()
+
+@app.route("/ping", methods=["GET"])
+def ping():
+    """Endpoint nyepesi inayopokea pings ili kuweka server alive"""
+    return jsonify({"status": "alive", "timestamp": time.time()}), 200
 
 def get_expert_instruction():
     """Prompt Mpya ya Expert Systems Architect & Diagram Generator"""
