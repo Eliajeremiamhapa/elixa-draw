@@ -3,13 +3,21 @@ import base64
 import time
 import threading
 import requests
-from flask import Flask, render_template, request, jsonify, session
+from functools import wraps
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from io import BytesIO
 from PIL import Image
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 app = Flask(__name__)
-# Inasoma Secret Key kutoka Render Environment Variables, au inatumia default ikiwa haipo
+
+# Inasoma Secret Key kutoka Render Environment Variables
 app.secret_key = os.environ.get("SECRET_KEY", "MUST_SUPER_PREFS_2026_FLASK_KEY")
+
+# Google OAuth Credentials kutoka Render Environment Variables
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
 # Title Mpya
 APP_NAME = "Elixa Smart Diagram & Architecture AI"
@@ -22,6 +30,15 @@ GEMINI_KEYS = [
         os.environ.get("GEMINI_API_KEY_3")
     ] if key
 ]
+
+# Decorator ya kuzuia mtumiaji asitumie mfumo bila kulogin na Google
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            return jsonify({"error": "Unauthorized. Tafadhali ingia na Google kwanza ili kutumia huduma hii."}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Keep-Alive Self-Ping Mechanism (Kuzuia Server Isilale)
 def start_keep_alive():
@@ -120,18 +137,79 @@ def call_gemini_api(history, key_index=0):
     except requests.exceptions.RequestException:
         return {"error": "Hitilafu ya mtandao imetokea."}
 
+# ================= AUTHENTICATION ROUTES =================
+
 @app.route("/")
 def index():
     if "chat_history" not in session:
         session["chat_history"] = []
-    return render_template("index.html", app_name=APP_NAME)
+
+    user_info = {
+        "is_logged_in": "user_id" in session,
+        "name": session.get("user_name", ""),
+        "email": session.get("user_email", ""),
+        "picture": session.get("user_picture", "")
+    }
+
+    return render_template(
+        "index.html", 
+        app_name=APP_NAME, 
+        user=user_info, 
+        google_client_id=GOOGLE_CLIENT_ID
+    )
+
+@app.route("/login/google", methods=["POST"])
+def google_login():
+    """Verify Google ID Token from Google Sign-In Client"""
+    data = request.json or {}
+    token = data.get("credential")
+    if not token:
+        return jsonify({"error": "Credential token haijapatikana."}), 400
+
+    try:
+        id_info = id_token.verify_oauth2_token(
+            token, 
+            google_requests.Request(), 
+            GOOGLE_CLIENT_ID
+        )
+
+        session["user_id"] = id_info.get("sub")
+        session["user_name"] = id_info.get("name", "Mbunifu")
+        session["user_email"] = id_info.get("email", "")
+        session["user_picture"] = id_info.get("picture", "")
+        
+        # Initialize user-bound chat history
+        session["chat_history"] = [
+            {
+                "role": "user",
+                "parts": [{"text": f"SYSTEM INSTRUCTION: {get_expert_instruction()}"}]
+            }
+        ]
+
+        return jsonify({
+            "status": "success",
+            "user_name": session["user_name"],
+            "user_email": session["user_email"],
+            "user_picture": session["user_picture"]
+        })
+
+    except ValueError:
+        return jsonify({"error": "Google Token si sahihi au imekwisha muda wake."}), 400
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return jsonify({"status": "success", "message": "Umetoka kwenye akaunti kikamilifu."})
+
+# ================= PROTECTED APPLICATION ROUTES =================
 
 @app.route("/set_name", methods=["POST"])
+@login_required
 def set_name():
     data = request.json or {}
     name = data.get("name", "").strip()
     if not name:
-        name = "Mbunifu"
+        name = session.get("user_name", "Mbunifu")
     session["user_name"] = name
     
     # Initialize system session history
@@ -151,6 +229,7 @@ def set_name():
     })
 
 @app.route("/process", methods=["POST"])
+@login_required
 def process():
     user_prompt = request.form.get("prompt", "").strip()
     image_file = request.files.get("image")
@@ -227,6 +306,7 @@ def process():
     })
 
 @app.route("/clear", methods=["POST"])
+@login_required
 def clear_history():
     session["chat_history"] = []
     session.modified = True
