@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Software & Database Diagram AI Generator</title>
     
+    <!-- Google Sign-In SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <!-- Maktaba za Mermaid (Mchoro) na Marked (Markdown Reader) -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -35,17 +38,19 @@
             flex-direction: column;
             background: #1E293B;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
 
         /* Top Header */
         .top-bar {
             background-color: #0F172A;
             color: #F8FAFC;
-            padding: 16px 20px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #334155;
+            z-index: 10;
         }
 
         .title-area h1 {
@@ -61,6 +66,12 @@
             font-weight: 600;
         }
 
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .status-indicator {
             width: 12px;
             height: 12px;
@@ -72,6 +83,104 @@
         .status-indicator.busy {
             background-color: #EAB308;
             box-shadow: 0 0 8px #EAB308;
+        }
+
+        /* User Profile & Auth Section */
+        .auth-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1E293B;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #F1F5F9;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .logout-btn {
+            background: transparent;
+            color: #94A3B8;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: auto;
+            height: auto;
+            transition: color 0.2s;
+        }
+
+        .logout-btn:hover {
+            color: #EF4444;
+            background: transparent;
+        }
+
+        /* Login Modal Overlay */
+        .login-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.3s ease;
+        }
+
+        .login-card {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 32px 24px;
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-card h2 {
+            color: #38BDF8;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .login-card p {
+            color: #94A3B8;
+            font-size: 13px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .google-btn-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
         }
 
         /* Chat Window */
@@ -223,8 +332,37 @@
                 <h1>SOFTWARE & DATABASE DIAGRAM AI</h1>
                 <span id="status-msg" class="status">CONNECTED | READY</span>
             </div>
-            <div class="status-indicator" id="status-indicator"></div>
+            
+            <div class="status-container">
+                <div class="auth-section" id="auth-section">
+                    <!-- Dynamic Auth View via JS -->
+                </div>
+                <div class="status-indicator" id="status-indicator"></div>
+            </div>
         </header>
+
+        <!-- Login Overlay (Inaonyeshwa mtumiaji akiwa hajatinga) -->
+        <div class="login-overlay" id="login-overlay" style="display: none;">
+            <div class="login-card">
+                <h2>Karibu Elixa AI</h2>
+                <p>Tafadhali ingia na akaunti yako ya Google ili kuanza kutengeneza na kuchanganua michoro ya mifumo na database.</p>
+                <div class="google-btn-wrapper">
+                    <div id="g_id_onload"
+                         data-client_id="{{ google_client_id }}"
+                         data-callback="handleCredentialResponse"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-size="large"
+                         data-theme="filled_blue"
+                         data-text="sign_in_with"
+                         data-shape="rectangular"
+                         data-logo_alignment="left">
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Chat Output Zone -->
         <main class="chat-container" id="chat-container">
@@ -252,6 +390,14 @@
 
     <!-- JAVASCRIPT -->
     <script>
+        // Taarifa za mtumiaji kutoka Jinja2 Flask Context
+        let currentUser = {
+            isLoggedIn: {{ 'true' if user.is_logged_in else 'false' }},
+            name: "{{ user.name }}",
+            email: "{{ user.email }}",
+            picture: "{{ user.picture }}"
+        };
+
         document.addEventListener("DOMContentLoaded", () => {
             mermaid.initialize({ startOnLoad: false, theme: 'default' });
 
@@ -263,6 +409,9 @@
 
             let isGenerating = false;
 
+            // Anzisha muonekano wa Login
+            updateAuthUI();
+
             promptInput.addEventListener("keydown", (e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -272,6 +421,12 @@
 
             chatForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
+
+                if (!currentUser.isLoggedIn) {
+                    document.getElementById("login-overlay").style.display = "flex";
+                    return;
+                }
+
                 const userPrompt = promptInput.value.trim();
 
                 if (!userPrompt || isGenerating) return;
@@ -295,6 +450,13 @@
                     });
 
                     const data = await response.json();
+
+                    if (response.status === 401) {
+                        currentUser.isLoggedIn = false;
+                        updateAuthUI();
+                        appendMessage("AI", "Tafadhali ingia na Google kwanza ili kuendelea.");
+                        return;
+                    }
 
                     if (response.ok && data.response) {
                         await renderAiResponse(data.response);
@@ -404,6 +566,71 @@
                 statusIndicator.classList.remove("busy");
             }
         });
+
+        // Callback Inayopokea Response kutoka Google OAuth Client
+        async function handleCredentialResponse(response) {
+            try {
+                const res = await fetch("/login/google", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ credential: response.credential })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.status === "success") {
+                    currentUser.isLoggedIn = true;
+                    currentUser.name = data.user_name;
+                    currentUser.email = data.user_email;
+                    currentUser.picture = data.user_picture;
+                    
+                    updateAuthUI();
+                } else {
+                    alert(data.error || "Imeshindwa kuingia na Google.");
+                }
+            } catch (err) {
+                console.error("Google Auth Error:", err);
+                alert("Hitilafu ya mtandao imetokea wakati wa kuingia.");
+            }
+        }
+
+        // Logout Functionality
+        async function handleLogout() {
+            try {
+                await fetch("/logout", { method: "POST" });
+                currentUser.isLoggedIn = false;
+                currentUser.name = "";
+                currentUser.email = "";
+                currentUser.picture = "";
+                updateAuthUI();
+            } catch (err) {
+                console.error("Logout error:", err);
+            }
+        }
+
+        // Kusimamia muonekano wa UI kulingana na Auth State
+        function updateAuthUI() {
+            const authSection = document.getElementById("auth-section");
+            const loginOverlay = document.getElementById("login-overlay");
+
+            if (currentUser.isLoggedIn) {
+                loginOverlay.style.display = "none";
+                const avatarSrc = currentUser.picture || '[https://via.placeholder.com/28](https://via.placeholder.com/28)';
+                authSection.innerHTML = `
+                    <div class="user-profile">
+                        <img src="${avatarSrc}" alt="Profile" class="user-avatar">
+                        <span class="user-name">${currentUser.name}</span>
+                        <button onclick="handleLogout()" class="logout-btn" title="Toka">Logout</button>
+                    </div>
+                `;
+            } else {
+                loginOverlay.style.display = "flex";
+                authSection.innerHTML = `
+                    <button onclick="document.getElementById('login-overlay').style.display='flex'" class="download-btn" style="position:static;">
+                        Ingia
+                    </button>
+                `;
+            }
+        }
     </script>
 </body>
 </html>
