@@ -3,495 +3,410 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Software & Database Diagram AI Generator</title>
-
-    <!-- Maktaba za Mermaid (Mchoro) na Marked (Markdown Reader) -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <title>SSMS Tanzania AI - Smart Education Assistant</title>
+    <!-- Tailwind CSS for modern, adaptive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Marked.js to handle Markdown conversion -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-    <!-- CSS -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        .bubble-user {
+            background-color: #FFFFFF;
+            border: 1px solid #D1D5DB;
+            color: #000000;
+            border-radius: 20px 20px 5px 20px;
         }
-
-        body {
-            background-color: #0F172A;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 900px;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background: #1E293B;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-
-        /* Top Header */
-        .top-bar {
-            background-color: #0F172A;
-            color: #F8FAFC;
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #334155;
-            z-index: 10;
-        }
-
-        .title-area h1 {
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            color: #38BDF8;
-        }
-
-        .status {
-            color: #94A3B8;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .status-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            background-color: #22C55E;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #22C55E;
-        }
-
-        .status-indicator.busy {
-            background-color: #EAB308;
-            box-shadow: 0 0 8px #EAB308;
-        }
-
-        /* User Profile Section */
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #1E293B;
-            padding: 4px 10px;
-            border-radius: 20px;
-            border: 1px solid #334155;
-        }
-
-        .user-name {
-            font-size: 12px;
-            font-weight: 600;
-            color: #F1F5F9;
-            max-width: 120px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* Chat Window */
-        .chat-container {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            background-color: #0F172A;
-        }
-
-        .message {
-            max-width: 90%;
-            padding: 14px 18px;
-            border-radius: 12px;
-            font-size: 15px;
-            line-height: 1.6;
-            word-wrap: break-word;
-        }
-
-        .user-message {
-            align-self: flex-end;
-            background-color: #0284C7;
+        .bubble-ai {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: #FFFFFF;
-            border-bottom-right-radius: 2px;
+            border-radius: 5px 20px 20px 20px;
         }
-
-        .ai-message {
-            align-self: flex-start;
-            background-color: #1E293B;
-            color: #F1F5F9;
-            border: 1px solid #334155;
-            border-bottom-left-radius: 2px;
+        .bubble-ai code {
+            background: rgba(255,255,255,0.15);
+            padding: 0.1rem 0.3rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
         }
-
-        /* Loading Animation CSS */
-        .typing-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .bubble-ai pre {
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 0.5rem 0;
         }
-
-        .typing-dots {
-            display: flex;
-            gap: 5px;
+        .bubble-ai table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.5rem 0;
         }
-
-        .typing-dots span {
+        .bubble-ai th, .bubble-ai td {
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0.3rem 0.5rem;
+            text-align: left;
+        }
+        .bubble-ai th {
+            background: rgba(255,255,255,0.1);
+        }
+        .bubble-ai ul, .bubble-ai ol {
+            padding-left: 1.5rem;
+            margin: 0.3rem 0;
+        }
+        .chat-scroll {
+            scrollbar-width: thin;
+            scroll-behavior: smooth;
+        }
+        /* Typing animation dot */
+        .typing-dot {
+            display: inline-block;
             width: 8px;
             height: 8px;
-            background-color: #38BDF8;
             border-radius: 50%;
+            background: white;
+            margin: 0 2px;
             animation: typingBounce 1.4s infinite ease-in-out both;
         }
-
-        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
-
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dot:nth-child(3) { animation-delay: 0s; }
         @keyframes typingBounce {
-            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
             40% { transform: scale(1); opacity: 1; }
         }
-
-        .loading-text {
-            font-size: 13px;
-            color: #94A3B8;
-            font-style: italic;
-        }
-
-        /* Container ya Mchoro na Download Button */
-        .diagram-wrapper {
-            position: relative;
-            background: #FFFFFF;
-            border-radius: 8px;
-            margin-top: 12px;
-            margin-bottom: 12px;
-            padding: 16px;
-            padding-top: 45px;
-        }
-
-        .download-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #0284C7;
-            color: #FFFFFF;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
+        .typing-indicator {
             display: flex;
             align-items: center;
-            gap: 6px;
-            transition: background 0.2s;
-            width: auto;
-            height: auto;
+            gap: 0.3rem;
+            padding: 0.3rem 0.8rem;
         }
-
-        .download-btn:hover {
-            background-color: #0369A1;
-        }
-
-        /* Box la Mchoro/Diagram */
-        .mermaid-box {
-            overflow-x: auto;
-            color: #000;
-            text-align: center;
-        }
-
-        /* Bottom Input Form */
-        .input-area {
-            padding: 16px;
-            background-color: #1E293B;
-            border-top: 1px solid #334155;
-        }
-
-        .input-card {
-            display: flex;
-            align-items: center;
-            background: #0F172A;
-            border-radius: 25px;
-            padding: 6px 12px;
-            border: 1px solid #334155;
-        }
-
-        textarea {
-            flex: 1;
-            border: none;
-            outline: none;
-            padding: 10px;
-            font-size: 15px;
-            resize: none;
-            background: transparent;
-            color: #F8FAFC;
-        }
-
-        button {
-            background-color: #0284C7;
-            color: white;
-            border: none;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: 0.2s ease;
-        }
-
-        button:hover {
-            background-color: #0369A1;
-        }
-
-        button:disabled {
-            background-color: #475569;
-            cursor: not-allowed;
-        }
-
-        .footer-credit {
-            text-align: center;
-            font-size: 11px;
-            color: #64748B;
-            margin-top: 8px;
-        }
-
-        .footer-credit a {
-            color: #38BDF8;
-            text-decoration: none;
-        }
+        /* SSMS Tanzania Brand Colors */
+        .ssms-primary { background: #1e3c72; }
+        .ssms-secondary { background: #2a5298; }
+        .ssms-accent { color: #f39c12; }
+        .ssms-gradient { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
+        .ssms-gradient-text { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col justify-between font-sans">
 
-    <div class="app-container">
-        <!-- Header -->
-        <header class="top-bar">
-            <div class="title-area">
-                <h1>SOFTWARE & DATABASE DIAGRAM AI</h1>
-                <span id="status-msg" class="status">CONNECTED | READY</span>
-            </div>
+    <!-- Top Bar - SSMS Tanzania Branding -->
+    <header class="ssms-gradient text-white py-4 px-6 shadow-md flex justify-between items-center sticky top-0 z-50">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+            <span>🏫</span> {{ app_name }}
+        </h1>
+        <div class="flex items-center gap-3">
+            <button id="btnClear" class="text-xs bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-3 rounded-lg transition-all" title="Futa historia yote">
+                🗑️ Futa Chat
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 w-full max-w-4xl mx-auto p-4 flex flex-col overflow-hidden h-[calc(100vh-140px)]">
+        
+        <!-- Chat Area -->
+        <div id="chatContainer" class="flex-1 overflow-y-auto chat-scroll space-y-4 p-4 bg-white rounded-xl border border-gray-200 shadow-inner">
+            <!-- Dynamic Messages will load here -->
+        </div>
+
+        <!-- Working Status Indicator -->
+        <div id="statusMsg" class="hidden text-sm text-slate-500 italic py-1 px-4 animate-pulse flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+            <span id="statusText">● SSMS AI inajiandaa...</span>
+        </div>
+
+        <!-- Attachment and Image preview -->
+        <div id="imagePreviewCard" class="hidden relative p-2 bg-gray-100 rounded-lg border border-dashed border-gray-300 mt-2 max-w-[200px]">
+            <img id="imgPreview" class="rounded object-cover max-h-32 w-full" src="" alt="Preview">
+            <button id="btnRemoveImage" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 text-xs hover:bg-red-700 shadow-lg" title="Ondoa Picha">
+                ✕
+            </button>
+            <div id="fileNameDisplay" class="text-xs text-gray-500 mt-1 truncate">📎 Picha imepakiwa</div>
+        </div>
+
+        <!-- Input Bar Form -->
+        <form id="processForm" class="mt-3 flex items-center gap-2 bg-white p-2 rounded-xl border border-gray-200 shadow-md">
+            <!-- Attachment Button -->
+            <button type="button" id="btnAttach" class="p-3 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 transition-colors" title="Pakia picha">
+                📷
+            </button>
+            <input type="file" id="fileInput" name="image" accept="image/*" class="hidden">
+            <input type="file" id="cameraInput" name="cameraImage" accept="image/*" capture="environment" class="hidden">
+
+            <input type="text" id="promptInput" name="prompt" placeholder="Andika swali lako hapa au pakia picha..." class="flex-1 border-0 focus:ring-0 focus:outline-none text-base px-2">
             
-            <div class="status-container">
-                <div class="user-profile">
-                    <span class="user-name">{{ user.name }}</span>
-                </div>
-                <div class="status-indicator" id="status-indicator"></div>
-            </div>
-        </header>
+            <button type="submit" id="btnProcess" class="ssms-gradient text-white font-bold py-3 px-6 rounded-lg transition-all hover:shadow-lg">
+                Tuma
+            </button>
+        </form>
+    </main>
 
-        <!-- Chat Output Zone -->
-        <main class="chat-container" id="chat-container">
-            <div class="message ai-message">
-                Habari! Mimi ni mtaalamu wa Database na Software Architecture.<br> 
-                Ruksa kuniomba michoro kama: <b>ERD, Use Case, Sequence, Class Diagram, Flowchart, na Architecture Context Diagrams</b>.
+    <!-- Name Prompt Modal (Karibu Dialog) -->
+    <div id="nameModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
+            <div class="text-center mb-4">
+                <span class="text-4xl">🏫</span>
+                <h2 class="text-2xl font-bold ssms-gradient-text mt-2">SSMS Tanzania AI</h2>
+                <p class="text-sm text-gray-500">Smart Education Assistant</p>
             </div>
-        </main>
-
-        <!-- Input Area -->
-        <footer class="input-area">
-            <form id="chat-form" class="input-card">
-                <textarea id="prompt-input" placeholder="Eleza mfumo wako (mfano: Nipe Use Case Diagram na ERD ya E-Commerce)..." rows="1" required></textarea>
-                <button type="submit" id="send-btn">
-                    <svg viewBox="0 0 24 24" width="24" height="24">
-                        <path fill="currentColor" d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
-                    </svg>
-                </button>
-            </form>
-            <p class="footer-credit">
-                Elixa AI Architecture Systems | 📞 0692416596 | ✉️ <a href="mailto:eliamhapa34@gmail.com">eliamhapa34@gmail.com</a>
+            <p class="text-sm text-gray-600 mb-4 text-center">
+                Karibu! Ingiza jina lako ili tuanze msaada wa elimu.
             </p>
-        </footer>
+            <input type="text" id="nameInput" placeholder="Jina lako hapa..." class="w-full border border-gray-300 rounded-lg p-2.5 mb-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none capitalize">
+            <button id="btnSaveName" class="w-full ssms-gradient text-white font-bold py-2.5 rounded-lg hover:shadow-lg transition-all">
+                🚀 Anza
+            </button>
+        </div>
     </div>
 
-    <!-- JAVASCRIPT -->
+    <!-- Page Logic Integration -->
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            mermaid.initialize({ startOnLoad: false, theme: 'default' });
+        const chatContainer = document.getElementById('chatContainer');
+        const promptInput = document.getElementById('promptInput');
+        const statusMsg = document.getElementById('statusMsg');
+        const statusText = document.getElementById('statusText');
+        const imagePreviewCard = document.getElementById('imagePreviewCard');
+        const imgPreview = document.getElementById('imgPreview');
+        const btnRemoveImage = document.getElementById('btnRemoveImage');
+        const btnAttach = document.getElementById('btnAttach');
+        const fileInput = document.getElementById('fileInput');
+        const cameraInput = document.getElementById('cameraInput');
+        const btnProcess = document.getElementById('btnProcess');
+        const processForm = document.getElementById('processForm');
+        const nameModal = document.getElementById('nameModal');
+        const nameInput = document.getElementById('nameInput');
+        const btnSaveName = document.getElementById('btnSaveName');
+        const btnClear = document.getElementById('btnClear');
 
-            const chatForm = document.getElementById("chat-form");
-            const promptInput = document.getElementById("prompt-input");
-            const sendBtn = document.getElementById("send-btn");
-            const statusMsg = document.getElementById("status-msg");
-            const statusIndicator = document.getElementById("status-indicator");
-            const chatContainer = document.getElementById("chat-container");
+        let isGenerating = false;
+        let selectedFile = null;
 
-            let isGenerating = false;
+        // On Load checks for User session name
+        window.onload = () => {
+            const userName = localStorage.getItem('user_name_2026');
+            if (!userName) {
+                nameModal.classList.remove('hidden');
+            } else {
+                nameModal.classList.add('hidden');
+                sendNameToServer(userName);
+                // Add welcome message from server via API
+                fetchWelcomeMessage(userName);
+            }
+        };
 
-            promptInput.addEventListener("keydown", (e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    chatForm.requestSubmit();
+        function fetchWelcomeMessage(name) {
+            fetch('/set_name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    addMessageBubble("SSMS AI", data.welcome_message, false);
                 }
             });
+        }
 
-            chatForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
+        btnSaveName.addEventListener('click', () => {
+            let name = nameInput.value.trim();
+            if(!name) name = "Mwalimu";
+            localStorage.setItem('user_name_2026', name);
+            nameModal.classList.add('hidden');
+            sendNameToServer(name);
+        });
 
-                const userPrompt = promptInput.value.trim();
-
-                if (!userPrompt || isGenerating) return;
-
-                appendMessage("User", userPrompt);
-                promptInput.value = "";
-                
-                isGenerating = true;
-                sendBtn.disabled = true;
-                statusMsg.innerText = "INACHORA MCHORO...";
-                statusIndicator.classList.add("busy");
-
-                // Loading animation
-                const loadingId = "loading-" + Date.now();
-                const loadingMsgDiv = document.createElement("div");
-                loadingMsgDiv.id = loadingId;
-                loadingMsgDiv.className = "message ai-message";
-                loadingMsgDiv.innerHTML = `
-                    <div class="typing-container">
-                        <div class="typing-dots">
-                            <span></span><span></span><span></span>
-                        </div>
-                        <span class="loading-text">Elixa AI inachanganua na kuchora...</span>
-                    </div>
-                `;
-                chatContainer.appendChild(loadingMsgDiv);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-
-                // Tumia FormData kulingana na backend ya Flask (/process)
-                const formData = new FormData();
-                formData.append("prompt", userPrompt);
-
-                try {
-                    const response = await fetch("/process", {
-                        method: "POST",
-                        body: formData
-                    });
-
-                    const data = await response.json();
-
-                    // Futa loading animation
-                    const loaderToRemove = document.getElementById(loadingId);
-                    if (loaderToRemove) loaderToRemove.remove();
-
-                    if (response.ok && data.response) {
-                        await renderAiResponse(data.response);
-                    } else {
-                        appendMessage("AI", data.error || "Imeshindwa kupata majibu kutoka kwa server.");
-                    }
-                } catch (err) {
-                    console.error(err);
-                    const loaderToRemove = document.getElementById(loadingId);
-                    if (loaderToRemove) loaderToRemove.remove();
-                    appendMessage("AI", "Hitilafu ya mtandao au server haipatikani.");
-                } finally {
-                    resetUIState();
+        function sendNameToServer(name) {
+            fetch('/set_name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    addMessageBubble("SSMS AI", data.welcome_message, false);
                 }
             });
+        }
 
-            async function renderAiResponse(fullText) {
-                const msgDiv = document.createElement("div");
-                msgDiv.className = "message ai-message";
+        // Image Selection
+        btnAttach.addEventListener('click', () => {
+            const selectSource = confirm("Chagua chanzo cha picha:\n\nOK - Piga Picha (Camera)\nCancel - Chagua kutoka Gallery");
+            if (selectSource) {
+                cameraInput.click();
+            } else {
+                fileInput.click();
+            }
+        });
 
-                // Gawanya majibu kwa mpangilio sahihi wa maandishi na michoro ya Mermaid
-                const parts = fullText.split(/(```mermaid[\s\S]*?```)/g);
-
-                chatContainer.appendChild(msgDiv);
-
-                for (const part of parts) {
-                    if (part.startsWith("```mermaid")) {
-                        const code = part.replace(/```mermaid|```/g, "").trim();
-                        
-                        // Wrapper ya Diagram na Kitufe cha Download
-                        const wrapperDiv = document.createElement("div");
-                        wrapperDiv.className = "diagram-wrapper";
-
-                        // Kitufe cha kudownload
-                        const downloadBtn = document.createElement("button");
-                        downloadBtn.className = "download-btn";
-                        downloadBtn.innerHTML = `
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            Download SVG
-                        `;
-
-                        const mermaidDiv = document.createElement("div");
-                        mermaidDiv.className = "mermaid-box mermaid";
-                        mermaidDiv.textContent = code;
-
-                        wrapperDiv.appendChild(downloadBtn);
-                        wrapperDiv.appendChild(mermaidDiv);
-                        msgDiv.appendChild(wrapperDiv);
-
-                        try {
-                            await mermaid.run({ nodes: [mermaidDiv] });
-
-                            // Event listener ya ku-download SVG
-                            downloadBtn.addEventListener("click", () => {
-                                downloadSVG(mermaidDiv, "diagram.svg");
-                            });
-                        } catch (e) {
-                            console.error("Mermaid Render Error:", e);
-                            mermaidDiv.innerHTML = `<span style="color:#EF4444; font-size:12px; font-weight:bold;">Hitilafu ya Kuchora Mchoro (Syntax Error).</span>`;
-                            downloadBtn.style.display = "none";
-                        }
-                    } else if (part.trim() !== "") {
-                        const textDiv = document.createElement("div");
-                        textDiv.innerHTML = marked.parse(part);
-                        msgDiv.appendChild(textDiv);
-                    }
+        function handleFile(input) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imgPreview.src = e.target.result;
+                    imagePreviewCard.classList.remove('hidden');
                 }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
 
-                chatContainer.scrollTop = chatContainer.scrollHeight;
+        fileInput.addEventListener('change', () => handleFile(fileInput));
+        cameraInput.addEventListener('change', () => handleFile(cameraInput));
+
+        btnRemoveImage.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = "";
+            cameraInput.value = "";
+            imagePreviewCard.classList.add('hidden');
+        });
+
+        // Clear History Handler
+        btnClear.addEventListener('click', () => {
+            if (confirm("Je, una uhakika unataka kufuta historia ya mazungumzo?")) {
+                fetch('/clear', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    chatContainer.innerHTML = "";
+                    // Reset with welcome message after clearing
+                    const userName = localStorage.getItem('user_name_2026') || 'Mwalimu';
+                    sendNameToServer(userName);
+                });
+            }
+        });
+
+        // Form Submit
+        processForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (isGenerating) return;
+
+            const promptText = promptInput.value.trim();
+            if (!promptText && !selectedFile) return;
+
+            // Render user bubble
+            if (promptText) {
+                addMessageBubble("User", promptText, false);
             }
 
-            // Function ya ku-download SVG
-            function downloadSVG(mermaidContainer, filename) {
-                const svgElement = mermaidContainer.querySelector("svg");
-                if (!svgElement) return;
-
-                const svgData = new XMLSerializer().serializeToString(svgElement);
-                const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-                const url = URL.createObjectURL(blob);
-
-                const downloadLink = document.createElement("a");
-                downloadLink.href = url;
-                downloadLink.download = filename;
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-                URL.revokeObjectURL(url);
+            // Prepare Payload
+            const formData = new FormData();
+            formData.append('prompt', promptText);
+            if (selectedFile) {
+                formData.append('image', selectedFile);
             }
 
-            function appendMessage(sender, text) {
-                const msgDiv = document.createElement("div");
-                msgDiv.className = `message ${sender === "User" ? "user-message" : "ai-message"}`;
-                msgDiv.innerText = text;
-                chatContainer.appendChild(msgDiv);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
+            // Reset UI
+            promptInput.value = "";
+            selectedFile = null;
+            fileInput.value = "";
+            cameraInput.value = "";
+            imagePreviewCard.classList.add('hidden');
 
-            function resetUIState() {
+            isGenerating = true;
+            statusMsg.classList.remove('hidden');
+            statusText.innerText = "● SSMS AI inatafuta jibu...";
+            btnProcess.innerText = "Inasubiri...";
+
+            // Add typing indicator
+            const typingId = addTypingIndicator();
+
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
                 isGenerating = false;
-                sendBtn.disabled = false;
-                statusMsg.innerText = "CONNECTED | READY";
-                statusIndicator.classList.remove("busy");
+                statusMsg.classList.add('hidden');
+                btnProcess.innerText = "Tuma";
+                removeTypingIndicator(typingId);
+
+                if (data.error) {
+                    alert("❌ " + data.error);
+                } else {
+                    addMessageBubble("SSMS AI", data.response, true);
+                }
+            })
+            .catch(err => {
+                isGenerating = false;
+                statusMsg.classList.add('hidden');
+                btnProcess.innerText = "Tuma";
+                removeTypingIndicator(typingId);
+                alert("❌ Hitilafu ya mtandao imetokea. Tafadhali jaribu tena.");
+            });
+        });
+
+        // Add typing indicator
+        function addTypingIndicator() {
+            const id = 'typing-' + Date.now();
+            const wrapper = document.createElement('div');
+            wrapper.id = id;
+            wrapper.className = 'flex w-full justify-start';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble-ai p-4 max-w-xl';
+            bubble.innerHTML = `
+                <div class="typing-indicator">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span style="font-size:0.8rem; margin-left: 0.5rem;">SSMS AI inaandika...</span>
+                </div>
+            `;
+            
+            wrapper.appendChild(bubble);
+            chatContainer.appendChild(wrapper);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.remove();
+            }
+        }
+
+        // Build and render chat bubbles
+        function addMessageBubble(sender, text, animate) {
+            const isUser = (sender === 'User');
+            
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `flex w-full ${isUser ? 'justify-end' : 'justify-start'}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-xl p-4 shadow-sm text-sm ${isUser ? 'bubble-user' : 'bubble-ai'}`;
+
+            messageWrapper.appendChild(bubble);
+            chatContainer.appendChild(messageWrapper);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            if (animate && !isUser) {
+                let index = 0;
+                const chunk = 15;
+                
+                function type() {
+                    if (index < text.length) {
+                        index = Math.min(index + chunk, text.length);
+                        bubble.innerHTML = marked.parse(text.substring(0, index));
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                        setTimeout(type, 1);
+                    } else {
+                        statusText.innerText = "✓ Jibu limewasilishwa";
+                        setTimeout(() => statusMsg.classList.add('hidden'), 1000);
+                    }
+                }
+                type();
+            } else {
+                bubble.innerHTML = marked.parse(text);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        // Keyboard shortcut: Enter to submit
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                processForm.dispatchEvent(new Event('submit'));
             }
         });
     </script>
