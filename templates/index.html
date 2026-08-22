@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sw" class="h-full">
+<html lang="sw">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ========== ELIXA STYLE ========== */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
         body {
@@ -24,6 +25,7 @@
         .chat-scroll::-webkit-scrollbar-thumb:hover { background: #6b7280; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
         
+        /* SIDEBAR */
         .sidebar {
             background: #0f172a;
             border-right: 1px solid #1e293b;
@@ -151,39 +153,38 @@
             scroll-behavior: smooth;
         }
         
-        /* Message Bubbles - Elixa Style */
-        .message-wrapper { display: flex; width: 100%; margin-bottom: 1rem; }
-        .message-wrapper.user { justify-content: flex-end; }
-        .message-wrapper.ai { justify-content: flex-start; }
-        
-        .message-bubble {
-            max-width: 75%;
+        /* Message Bubbles */
+        .bubble-user {
+            background: #4f46e5;
+            color: white;
+            border-radius: 1.2rem 1.2rem 0.2rem 1.2rem;
             padding: 0.8rem 1.2rem;
-            border-radius: 1.2rem;
+            max-width: 75%;
             font-size: 0.9rem;
             line-height: 1.6;
             word-wrap: break-word;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        .message-bubble.user {
-            background: #4f46e5;
-            color: white;
-            border-bottom-right-radius: 0.2rem;
-        }
-        .message-bubble.ai {
+        .bubble-ai {
             background: #1e293b;
             color: #e5e7eb;
             border: 1px solid #334155;
-            border-bottom-left-radius: 0.2rem;
+            border-radius: 1.2rem 1.2rem 1.2rem 0.2rem;
+            padding: 0.8rem 1.2rem;
+            max-width: 75%;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        .message-bubble.ai code {
+        .bubble-ai code {
             background: #0f172a;
             padding: 0.1rem 0.3rem;
             border-radius: 4px;
             font-size: 0.85rem;
             color: #a5b4fc;
         }
-        .message-bubble.ai pre {
+        .bubble-ai pre {
             background: #0f172a;
             padding: 0.6rem;
             border-radius: 6px;
@@ -191,20 +192,24 @@
             margin: 0.4rem 0;
             border: 1px solid #1e293b;
         }
-        .message-bubble.ai table {
+        .bubble-ai table {
             border-collapse: collapse;
             width: 100%;
             margin: 0.4rem 0;
             font-size: 0.8rem;
         }
-        .message-bubble.ai th, .message-bubble.ai td {
+        .bubble-ai th, .bubble-ai td {
             border: 1px solid #334155;
             padding: 0.2rem 0.5rem;
             text-align: left;
         }
-        .message-bubble.ai th { background: #0f172a; color: #818cf8; }
-        .message-bubble.ai ul, .message-bubble.ai ol { padding-left: 1.2rem; margin: 0.3rem 0; }
-        .message-bubble.ai a { color: #818cf8; text-decoration: underline; }
+        .bubble-ai th { background: #0f172a; color: #818cf8; }
+        .bubble-ai ul, .bubble-ai ol { padding-left: 1.2rem; margin: 0.3rem 0; }
+        .bubble-ai a { color: #818cf8; text-decoration: underline; }
+        
+        .message-wrapper { display: flex; width: 100%; margin-bottom: 1rem; }
+        .message-wrapper.user { justify-content: flex-end; }
+        .message-wrapper.ai { justify-content: flex-start; }
         
         .message-avatar {
             width: 2.2rem;
@@ -231,25 +236,18 @@
         
         .message-wrapper.user .message-content { order: 1; }
         .message-wrapper.user .message-avatar { order: 2; }
-        
         .message-content {
             display: flex;
             flex-direction: column;
         }
-        .message-content .message-bubble { margin: 0; }
         
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            padding: 0.3rem 0.2rem;
-        }
         .typing-dot {
             display: inline-block;
             width: 8px;
             height: 8px;
             border-radius: 50%;
             background: #818cf8;
+            margin: 0 2px;
             animation: typingBounce 1.4s infinite ease-in-out both;
         }
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
@@ -258,6 +256,12 @@
         @keyframes typingBounce {
             0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
             40% { transform: scale(1); opacity: 1; }
+        }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.8rem;
         }
         
         .input-area {
@@ -446,7 +450,7 @@
         .suggestion-btn:hover .title i { color: #818cf8; }
         .suggestion-btn .desc { color: #9ca3af; font-size: 0.7rem; }
         
-        /* FIX: Name Modal - hidden by default */
+        /* Name Modal */
         #nameModal {
             display: none;
             position: fixed;
@@ -470,7 +474,7 @@
             .main-content { margin-left: 0; }
             .hamburger-btn { display: block; }
             .chat-container { padding: 1rem; }
-            .message-bubble { max-width: 85%; font-size: 0.85rem; }
+            .bubble-user, .bubble-ai { max-width: 85%; font-size: 0.85rem; }
             .welcome-title { font-size: 1.3rem; }
             .suggestion-grid { grid-template-columns: 1fr; }
             .input-form { padding-left: 0.5rem; }
@@ -480,7 +484,7 @@
             .top-header-title span { display: none; }
             .top-header-title .badge { display: none; }
             .chat-container { padding: 0.8rem; }
-            .message-bubble { padding: 0.6rem 0.8rem; font-size: 0.8rem; }
+            .bubble-user, .bubble-ai { padding: 0.6rem 0.8rem; font-size: 0.8rem; }
             .message-avatar { width: 1.8rem; height: 1.8rem; font-size: 0.7rem; }
         }
     </style>
@@ -543,9 +547,9 @@
             </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <button id="btnClearChat" style="background: transparent; border: 1px solid #334155; color: #9ca3af; padding: 0.3rem 0.8rem; border-radius: 8px; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem;">
+            <button id="btnClear" style="background: transparent; border: 1px solid #334155; color: #9ca3af; padding: 0.3rem 0.8rem; border-radius: 8px; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem;">
                 <i class="fas fa-trash-alt"></i>
-                <span class="hidden sm:inline">Clear</span>
+                <span class="hidden sm:inline">Futa Chat</span>
             </button>
         </div>
     </header>
@@ -564,43 +568,50 @@
                 Msaidizi wako wa kujifunza. Uliza maswali yako kuhusu masomo, kazi, au elimu kwa ujumla.
             </p>
             <div class="suggestion-grid">
-                <button class="suggestion-btn" data-prompt="Nieleze dhana ya photosynthesis">
+                <button class="suggestion-btn" onclick="sendQuickPrompt('Nieleze dhana ya photosynthesis')">
                     <div class="title">🌿 Photosynthesis <i class="fas fa-arrow-right"></i></div>
                     <div class="desc">Elezea mchakato wa photosynthesis</div>
                 </button>
-                <button class="suggestion-btn" data-prompt="Nisaidie kukumbuka meza ya marudio ya Kiswahili">
+                <button class="suggestion-btn" onclick="sendQuickPrompt('Nisaidie kukumbuka meza ya marudio ya Kiswahili')">
                     <div class="title">📚 Kiswahili <i class="fas fa-arrow-right"></i></div>
                     <div class="desc">Meza na mifano ya marudio</div>
                 </button>
-                <button class="suggestion-btn" data-prompt="Nieleze formula ya mzunguko wa duara">
+                <button class="suggestion-btn" onclick="sendQuickPrompt('Nieleze formula ya mzunguko wa duara')">
                     <div class="title">📐 Hisabati <i class="fas fa-arrow-right"></i></div>
                     <div class="desc">Mzunguko wa duara (Circumference)</div>
                 </button>
-                <button class="suggestion-btn" data-prompt="Nisaidie kuandika insha fupi kuhusu mazingira">
+                <button class="suggestion-btn" onclick="sendQuickPrompt('Nisaidie kuandika insha fupi kuhusu mazingira')">
                     <div class="title">✍️ Insha <i class="fas fa-arrow-right"></i></div>
                     <div class="desc">Mfano wa insha kuhusu mazingira</div>
                 </button>
             </div>
         </div>
         <!-- Messages will be appended here -->
-        <div id="messagesList" style="display: none;"></div>
+        <div id="messagesList"></div>
     </div>
 
     <!-- Image Preview -->
     <div id="imagePreviewCard" class="image-preview" style="display: none;">
         <img id="imgPreview" src="" alt="Preview">
         <button class="remove-btn" id="btnRemoveImage">✕</button>
+        <div id="fileNameDisplay" style="font-size: 0.6rem; color: #6b7280; margin-top: 0.2rem; text-align: center;">📎 Picha imepakiwa</div>
     </div>
 
     <!-- Input Area -->
     <div class="input-area">
         <form id="processForm" class="input-form">
-            <button type="button" id="btnAttach" class="attach-btn" title="Pakia Picha">
-                <i class="fas fa-paperclip"></i>
-            </button>
-            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+            <div style="display: flex; gap: 2px;">
+                <button type="button" id="btnCamera" class="attach-btn" title="Piga Picha">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <button type="button" id="btnGallery" class="attach-btn" title="Chagua Kutoka Storage">
+                    <i class="fas fa-image"></i>
+                </button>
+            </div>
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+            <input type="file" id="fileInput" name="image" accept="image/*" style="display: none;">
             
-            <input type="text" id="promptInput" placeholder="Andika swali lako hapa..." autocomplete="off">
+            <input type="text" id="promptInput" name="prompt" placeholder="Andika swali lako hapa au pakia picha..." autocomplete="off">
             
             <button type="submit" id="btnProcess" class="btn-send">
                 Tuma
@@ -609,7 +620,7 @@
     </div>
 </main>
 
-<!-- Name Modal - FIXED -->
+<!-- Name Modal -->
 <div id="nameModal">
     <div style="background: #1e293b; border: 1px solid #334155; border-radius: 1.2rem; padding: 2rem; max-width: 400px; width: 100%; text-align: center;">
         <div style="width: 4rem; height: 4rem; border-radius: 1rem; background: #1e293b; border: 1px solid #4f46e5; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2rem; color: #818cf8;">
@@ -628,96 +639,60 @@
 
 <script>
     // ============================================================
-    // SSMS AI - Full JavaScript Logic
+    // SSMS AI - FULL JAVASCRIPT LOGIC (HAKUBADILISHWA)
     // ============================================================
     
-    // DOM References
     const chatContainer = document.getElementById('chatContainer');
-    const welcomeScreen = document.getElementById('welcomeScreen');
-    const messagesList = document.getElementById('messagesList');
     const promptInput = document.getElementById('promptInput');
-    const processForm = document.getElementById('processForm');
-    const btnProcess = document.getElementById('btnProcess');
-    const btnNewChat = document.getElementById('btnNewChat');
-    const btnClearChat = document.getElementById('btnClearChat');
-    const btnAttach = document.getElementById('btnAttach');
-    const fileInput = document.getElementById('fileInput');
     const imagePreviewCard = document.getElementById('imagePreviewCard');
     const imgPreview = document.getElementById('imgPreview');
     const btnRemoveImage = document.getElementById('btnRemoveImage');
+    const btnCamera = document.getElementById('btnCamera');
+    const btnGallery = document.getElementById('btnGallery');
+    const fileInput = document.getElementById('fileInput');
+    const cameraInput = document.getElementById('cameraInput');
+    const btnProcess = document.getElementById('btnProcess');
+    const processForm = document.getElementById('processForm');
     const nameModal = document.getElementById('nameModal');
     const nameInput = document.getElementById('nameInput');
     const btnSaveName = document.getElementById('btnSaveName');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    const hamburgerBtn = document.getElementById('hamburgerBtn');
-    const historyList = document.getElementById('historyList');
-    const sidebarUserName = document.getElementById('sidebarUserName');
-    const welcomeUserName = document.getElementById('welcomeUserName');
-    const noHistoryText = document.getElementById('noHistoryText');
+    const btnClear = document.getElementById('btnClear');
+    const messagesList = document.getElementById('messagesList');
+    const welcomeScreen = document.getElementById('welcomeScreen');
 
     let isGenerating = false;
     let selectedFile = null;
-    let currentUserName = '';
 
-    // ============================================================
-    // NAME HANDLING - FIXED
-    // ============================================================
-    
-    function showNameModal() {
-        nameModal.classList.add('active');
-    }
-    
-    function hideNameModal() {
+    // ============= NAME HANDLING =============
+    window.onload = () => {
+        const userName = localStorage.getItem('user_name_2026');
+        if (!userName) {
+            nameModal.classList.add('active');
+        } else {
+            nameModal.classList.remove('active');
+            sendNameToServer(userName);
+            document.getElementById('sidebarUserName').textContent = userName;
+            document.getElementById('welcomeUserName').textContent = userName;
+        }
+    };
+
+    btnSaveName.addEventListener('click', () => {
+        let name = nameInput.value.trim();
+        if(!name) name = "Mwalimu";
+        localStorage.setItem('user_name_2026', name);
         nameModal.classList.remove('active');
-    }
-    
-    function getUserName() {
-        return localStorage.getItem('ssms_user_name') || '';
-    }
-    
-    function setUserName(name) {
-        localStorage.setItem('ssms_user_name', name);
-        currentUserName = name;
-        sidebarUserName.textContent = name;
-        welcomeUserName.textContent = name;
-    }
-    
-    // Check for existing user
-    window.addEventListener('DOMContentLoaded', function() {
-        const savedName = getUserName();
-        if (savedName) {
-            setUserName(savedName);
-            hideNameModal();
-            loadChatHistory();
-        } else {
-            showNameModal();
-            nameInput.focus();
-        }
+        document.getElementById('sidebarUserName').textContent = name;
+        document.getElementById('welcomeUserName').textContent = name;
+        sendNameToServer(name);
     });
-    
-    btnSaveName.addEventListener('click', function() {
-        const name = nameInput.value.trim();
-        if (name) {
-            setUserName(name);
-            hideNameModal();
-            loadChatHistory();
-            // Send welcome message from server
-            sendNameToServer(name);
-        } else {
-            nameInput.focus();
-            nameInput.style.borderColor = '#ef4444';
-            setTimeout(() => nameInput.style.borderColor = '#334155', 2000);
-        }
-    });
-    
-    nameInput.addEventListener('keydown', function(e) {
+
+    // Enter key on name input
+    nameInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            e.preventDefault();
             btnSaveName.click();
         }
     });
-    
+
     function sendNameToServer(name) {
         fetch('/set_name', {
             method: 'POST',
@@ -726,191 +701,251 @@
         })
         .then(res => res.json())
         .then(data => {
-            if (data.status === 'success' && data.welcome_message) {
-                addMessage('ai', data.welcome_message);
+            if(data.status === 'success' && data.welcome_message) {
+                addMessageBubble("SSMS AI", data.welcome_message, false);
             }
         })
         .catch(() => {});
     }
 
-    // ============================================================
-    // SIDEBAR / MOBILE CONTROLS
-    // ============================================================
-    
-    function openSidebar() {
-        sidebar.classList.add('open');
-        sidebarOverlay.classList.add('active');
-    }
-    
-    function closeSidebar() {
-        sidebar.classList.remove('open');
-        sidebarOverlay.classList.remove('active');
-    }
-    
-    hamburgerBtn.addEventListener('click', openSidebar);
-    sidebarOverlay.addEventListener('click', closeSidebar);
-    
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeSidebar();
+    // ============= ATTACHMENT HANDLING =============
+    btnCamera.addEventListener('click', () => {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            cameraInput.click();
+        } else {
+            alert("Camera not supported on this device. Please select from gallery.");
+            fileInput.click();
+        }
     });
 
-    // ============================================================
-    // CHAT HISTORY
-    // ============================================================
-    
-    function loadChatHistory() {
-        fetch('/history')
-            .then(res => res.json())
-            .then(data => {
-                if (data.history && data.history.length > 0) {
-                    updateHistoryList(data.history);
-                    if (data.current_chat && data.current_chat.messages) {
-                        showChat(data.current_chat.messages);
-                    }
-                }
-            })
-            .catch(() => {});
-    }
-    
-    function updateHistoryList(history) {
-        if (noHistoryText) noHistoryText.style.display = 'none';
-        
-        const items = historyList.querySelectorAll('.history-item');
-        items.forEach(el => el.remove());
-        
-        history.slice().reverse().forEach(chat => {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            div.dataset.chatId = chat.id;
-            div.innerHTML = `
-                <i class="fas fa-comment"></i>
-                <span class="truncate">${chat.title || 'Mazungumzo'}</span>
-            `;
-            div.addEventListener('click', function() {
-                loadChat(chat.id);
-                closeSidebar();
-            });
-            historyList.appendChild(div);
-        });
-    }
-    
-    function loadChat(chatId) {
-        fetch('/load_chat?id=' + chatId)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.messages) {
-                    showChat(data.messages);
-                }
-            })
-            .catch(() => {});
-    }
-    
-    function showChat(messages) {
-        welcomeScreen.style.display = 'none';
-        messagesList.style.display = 'block';
-        messagesList.innerHTML = '';
-        
-        messages.forEach(msg => {
-            if (msg.parts && msg.parts[0] && msg.parts[0].text && 
-                msg.parts[0].text.startsWith('SYSTEM INSTRUCTION:')) {
-                return;
+    btnGallery.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    function handleFile(input) {
+        if (input.files && input.files[0]) {
+            selectedFile = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imgPreview.src = e.target.result;
+                imagePreviewCard.style.display = 'block';
+                document.getElementById('fileNameDisplay').textContent = '📎 ' + selectedFile.name;
             }
-            let text = '';
-            if (msg.parts) {
-                msg.parts.forEach(p => {
-                    if (p.text) text += p.text;
-                });
-            }
-            if (text) {
-                const role = msg.role === 'user' ? 'user' : 'ai';
-                addMessage(role, text, false);
-            }
-        });
-        
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+            reader.readAsDataURL(input.files[0]);
+        }
     }
 
-    // ============================================================
-    // MESSAGE RENDERING
-    // ============================================================
-    
-    function addMessage(role, text, animate = true) {
-        welcomeScreen.style.display = 'none';
-        messagesList.style.display = 'block';
-        
+    fileInput.addEventListener('change', () => {
+        handleFile(fileInput);
+        fileInput.value = '';
+    });
+
+    cameraInput.addEventListener('change', () => {
+        handleFile(cameraInput);
+        cameraInput.value = '';
+    });
+
+    btnRemoveImage.addEventListener('click', () => {
+        selectedFile = null;
+        fileInput.value = "";
+        cameraInput.value = "";
+        imagePreviewCard.style.display = 'none';
+    });
+
+    // ============= CLEAR HISTORY =============
+    btnClear.addEventListener('click', () => {
+        if (confirm("Je, una uhakika unataka kufuta historia ya mazungumzo?")) {
+            fetch('/clear', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                chatContainer.innerHTML = '';
+                const userName = localStorage.getItem('user_name_2026') || 'Mwalimu';
+                sendNameToServer(userName);
+            });
+        }
+    });
+
+    // ============= SEND QUICK PROMPT =============
+    function sendQuickPrompt(text) {
+        promptInput.value = text;
+        processForm.dispatchEvent(new Event('submit'));
+    }
+
+    // ============= FORM SUBMIT =============
+    processForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (isGenerating) return;
+
+        const promptText = promptInput.value.trim();
+        if (!promptText && !selectedFile) {
+            alert("Tafadhali andika swali au pakia picha.");
+            return;
+        }
+
+        if (promptText) {
+            addMessageBubble("User", promptText, false);
+        }
+
+        const formData = new FormData();
+        formData.append('prompt', promptText);
+        if (selectedFile) {
+            formData.append('image', selectedFile);
+        }
+
+        promptInput.value = "";
+        selectedFile = null;
+        fileInput.value = "";
+        cameraInput.value = "";
+        imagePreviewCard.style.display = 'none';
+
+        isGenerating = true;
+        btnProcess.disabled = true;
+        btnProcess.textContent = "Inasubiri...";
+
+        const typingId = addTypingIndicator();
+
+        fetch('/process', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            isGenerating = false;
+            btnProcess.disabled = false;
+            btnProcess.textContent = "Tuma";
+            removeTypingIndicator(typingId);
+
+            if (data.error) {
+                alert("❌ " + data.error);
+            } else {
+                addMessageBubble("SSMS AI", data.response, true);
+            }
+        })
+        .catch(err => {
+            isGenerating = false;
+            btnProcess.disabled = false;
+            btnProcess.textContent = "Tuma";
+            removeTypingIndicator(typingId);
+            alert("❌ Hitilafu ya mtandao. Jaribu tena.");
+        });
+    });
+
+    // ============= TYPING INDICATOR =============
+    function addTypingIndicator() {
+        const id = 'typing-' + Date.now();
         const wrapper = document.createElement('div');
-        wrapper.className = `message-wrapper ${role}`;
+        wrapper.id = id;
+        wrapper.className = 'message-wrapper ai';
         
         const avatar = document.createElement('div');
-        avatar.className = `message-avatar ${role}`;
-        avatar.innerHTML = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+        avatar.className = 'message-avatar ai';
+        avatar.innerHTML = '<i class="fas fa-robot"></i>';
         
         const content = document.createElement('div');
         content.className = 'message-content';
         
         const bubble = document.createElement('div');
-        bubble.className = `message-bubble ${role}`;
+        bubble.className = 'bubble-ai';
+        bubble.innerHTML = `
+            <div class="typing-indicator">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span style="font-size:0.8rem; margin-left: 0.5rem;">SSMS AI inaandika...</span>
+            </div>
+        `;
         
-        if (role === 'ai' && animate) {
+        content.appendChild(bubble);
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(content);
+        chatContainer.appendChild(wrapper);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        return id;
+    }
+
+    function removeTypingIndicator(id) {
+        const element = document.getElementById(id);
+        if (element) element.remove();
+    }
+
+    // ============= MESSAGE BUBBLES =============
+    function addMessageBubble(sender, text, animate) {
+        const isUser = (sender === 'User');
+        
+        // Hide welcome screen
+        if (welcomeScreen) welcomeScreen.style.display = 'none';
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = `message-wrapper ${isUser ? 'user' : 'ai'}`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = `message-avatar ${isUser ? 'user' : 'ai'}`;
+        avatar.innerHTML = isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+        
+        const content = document.createElement('div');
+        content.className = 'message-content';
+        
+        const bubble = document.createElement('div');
+        bubble.className = isUser ? 'bubble-user' : 'bubble-ai';
+        
+        if (isUser) {
             content.appendChild(bubble);
             wrapper.appendChild(content);
-            if (role === 'user') {
-                wrapper.appendChild(avatar);
-            } else {
-                wrapper.prepend(avatar);
-            }
-            messagesList.appendChild(wrapper);
-            
+            wrapper.appendChild(avatar);
+        } else {
+            wrapper.appendChild(avatar);
+            content.appendChild(bubble);
+            wrapper.appendChild(content);
+        }
+        
+        chatContainer.appendChild(wrapper);
+
+        if (animate && !isUser) {
             let index = 0;
-            const chunk = 10;
+            const chunk = 15;
             
-            function typeNext() {
+            function type() {
                 if (index < text.length) {
                     index = Math.min(index + chunk, text.length);
                     bubble.innerHTML = marked.parse(text.substring(0, index));
                     chatContainer.scrollTop = chatContainer.scrollHeight;
-                    setTimeout(typeNext, 5);
+                    setTimeout(type, 1);
                 } else {
                     bubble.innerHTML = marked.parse(text);
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
             }
-            typeNext();
+            type();
         } else {
             bubble.innerHTML = marked.parse(text);
-            content.appendChild(bubble);
-            wrapper.appendChild(content);
-            if (role === 'user') {
-                wrapper.appendChild(avatar);
-            } else {
-                wrapper.prepend(avatar);
-            }
-            messagesList.appendChild(wrapper);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
     }
 
-    // ============================================================
-    // IMAGE HANDLING
-    // ============================================================
-    
-    btnAttach.addEventListener('click', function() {
-        fileInput.click();
-    });
-    
-    fileInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            selectedFile = this.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imgPreview.src = e.target.result;
-                imagePreviewCard.style.display = 'block';
-            };
-            reader.readAsDataURL(selectedFile);
+    // ============= KEYBOARD SHORTCUT =============
+    promptInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            processForm.dispatchEvent(new Event('submit'));
         }
     });
-    
-    btnRemoveImage.addEventListener('click', function() {
-        selectedFile = null;
-        fileInput.value = '';
-       
+
+    // ============================================================
+    // SIDEBAR CONTROLS
+    // ============================================================
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+
+    hamburgerBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('active');
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+    });
+</script>
+</body>
+</html>
