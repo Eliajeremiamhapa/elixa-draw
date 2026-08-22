@@ -446,6 +446,22 @@
         .suggestion-btn:hover .title i { color: #818cf8; }
         .suggestion-btn .desc { color: #9ca3af; font-size: 0.7rem; }
         
+        /* FIX: Name Modal - hidden by default */
+        #nameModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 1rem;
+        }
+        #nameModal.active {
+            display: flex;
+        }
+        
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -593,8 +609,8 @@
     </div>
 </main>
 
-<!-- Name Modal -->
-<div id="nameModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 1rem;">
+<!-- Name Modal - FIXED -->
+<div id="nameModal">
     <div style="background: #1e293b; border: 1px solid #334155; border-radius: 1.2rem; padding: 2rem; max-width: 400px; width: 100%; text-align: center;">
         <div style="width: 4rem; height: 4rem; border-radius: 1rem; background: #1e293b; border: 1px solid #4f46e5; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2rem; color: #818cf8;">
             <i class="fas fa-graduation-cap"></i>
@@ -645,15 +661,15 @@
     let currentUserName = '';
 
     // ============================================================
-    // NAME HANDLING
+    // NAME HANDLING - FIXED
     // ============================================================
     
     function showNameModal() {
-        nameModal.style.display = 'flex';
+        nameModal.classList.add('active');
     }
     
     function hideNameModal() {
-        nameModal.style.display = 'none';
+        nameModal.classList.remove('active');
     }
     
     function getUserName() {
@@ -676,6 +692,7 @@
             loadChatHistory();
         } else {
             showNameModal();
+            nameInput.focus();
         }
     });
     
@@ -695,7 +712,10 @@
     });
     
     nameInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') btnSaveName.click();
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btnSaveName.click();
+        }
     });
     
     function sendNameToServer(name) {
@@ -707,7 +727,6 @@
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success' && data.welcome_message) {
-                // Add welcome message from server if any
                 addMessage('ai', data.welcome_message);
             }
         })
@@ -731,7 +750,6 @@
     hamburgerBtn.addEventListener('click', openSidebar);
     sidebarOverlay.addEventListener('click', closeSidebar);
     
-    // Close sidebar on escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeSidebar();
     });
@@ -741,14 +759,11 @@
     // ============================================================
     
     function loadChatHistory() {
-        // Fetch chat history from server
         fetch('/history')
             .then(res => res.json())
             .then(data => {
                 if (data.history && data.history.length > 0) {
-                    // Update sidebar
                     updateHistoryList(data.history);
-                    // Load last chat if exists
                     if (data.current_chat && data.current_chat.messages) {
                         showChat(data.current_chat.messages);
                     }
@@ -760,11 +775,9 @@
     function updateHistoryList(history) {
         if (noHistoryText) noHistoryText.style.display = 'none';
         
-        // Clear existing history items (keep noHistoryText)
         const items = historyList.querySelectorAll('.history-item');
         items.forEach(el => el.remove());
         
-        // Add items in reverse (newest first)
         history.slice().reverse().forEach(chat => {
             const div = document.createElement('div');
             div.className = 'history-item';
@@ -793,12 +806,10 @@
     }
     
     function showChat(messages) {
-        // Hide welcome, show messages
         welcomeScreen.style.display = 'none';
         messagesList.style.display = 'block';
         messagesList.innerHTML = '';
         
-        // Filter out system messages
         messages.forEach(msg => {
             if (msg.parts && msg.parts[0] && msg.parts[0].text && 
                 msg.parts[0].text.startsWith('SYSTEM INSTRUCTION:')) {
@@ -816,7 +827,6 @@
             }
         });
         
-        // Scroll to bottom
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
@@ -825,27 +835,22 @@
     // ============================================================
     
     function addMessage(role, text, animate = true) {
-        // Hide welcome screen
         welcomeScreen.style.display = 'none';
         messagesList.style.display = 'block';
         
         const wrapper = document.createElement('div');
         wrapper.className = `message-wrapper ${role}`;
         
-        // Avatar
         const avatar = document.createElement('div');
         avatar.className = `message-avatar ${role}`;
         avatar.innerHTML = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
         
-        // Content wrapper
         const content = document.createElement('div');
         content.className = 'message-content';
         
-        // Bubble
         const bubble = document.createElement('div');
         bubble.className = `message-bubble ${role}`;
         
-        // If AI and animate, type it out
         if (role === 'ai' && animate) {
             content.appendChild(bubble);
             wrapper.appendChild(content);
@@ -856,7 +861,6 @@
             }
             messagesList.appendChild(wrapper);
             
-            // Typing animation
             let index = 0;
             const chunk = 10;
             
@@ -867,7 +871,6 @@
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                     setTimeout(typeNext, 5);
                 } else {
-                    // Ensure full text is shown
                     bubble.innerHTML = marked.parse(text);
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
@@ -886,20 +889,28 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
     }
+
+    // ============================================================
+    // IMAGE HANDLING
+    // ============================================================
     
-    function addTypingIndicator() {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'message-wrapper ai';
-        wrapper.id = 'typing-indicator';
-        
-        const avatar = document.createElement('div');
-        avatar.className = 'message-avatar ai';
-        avatar.innerHTML = '<i class="fas fa-robot"></i>';
-        
-        const content = document.createElement('div');
-        content.className = 'message-content';
-        
-        const bubble = document.createElement('div');
-        bubble.className = 'message-bubble ai';
-        bubble.innerHTML = `
-           
+    btnAttach.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            selectedFile = this.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imgPreview.src = e.target.result;
+                imagePreviewCard.style.display = 'block';
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+    });
+    
+    btnRemoveImage.addEventListener('click', function() {
+        selectedFile = null;
+        fileInput.value = '';
+       
